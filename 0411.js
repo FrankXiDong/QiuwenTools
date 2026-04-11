@@ -1,4 +1,4 @@
-/* 本工具用于批量修改页面分类 */
+/* 20260411：批量移动分类：“中国各朝代”→“中国各时期” */
 
 const { Mwn } = require('mwn');
 const fs = require('fs');
@@ -120,81 +120,61 @@ async function main() {
         "format": "json",
         "list": "categorymembers",
         "formatversion": "2",
-        "cmtitle": "Category:中华人民共和国地方性法规",
+        "cmtitle": "Category:中国各时期分类",
         "cmlimit": "max"
     })
-    const titleList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
+    const categoryList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
     
-    // 使用正确的 for 循环语法和 move 方法参数
-    for (const Title of titleList) {
-        if (!Title.includes('黑龙江省')) {
-            // console.debug(pc.yellow(`[SKIP] 页面不包含“黑龙江省”，跳过 (${Title})`));
-            continue; // 跳过不包含“黑龙江省”的页面
+    for (let categoryName0 of categoryList) {
+        let categoryName1 = categoryName0.replace('中国各朝代','中国各时期');
+        if (categoryName0 === categoryName1){
+            console.log(`[SKIP] 相同标题，跳过移动`);
+            continue
         }
-        if (Title.includes('Category:')) {
-            console.debug(pc.yellow(`[SKIP] 页面是分类页面，跳过 (${Title})`));
-            continue; // 跳过分类页面
-        }
-        try {
-            let summary = '快速移动页面分类：[[:Category:中华人民共和国地方性法规]]→[[:Category:黑龙江省地方性法规]]';
-            // const summary = '回退对文件名的修改';；同时添加模板参数
-            
-            const originalWikitext = await bot.read(Title);
-            let wikitext = originalWikitext.revisions[0].content;
-            
+        let summary = '批量移动分类：“中国各朝代”→“中国各时期”'
+        const result = await bot.move(
+                fromtitle=categoryName0,  // fromtitle 参数
+                totitle=categoryName1,    // totitle 参数
+                summary,    // reason/summary 参数
+                {
+                    reason: summary, // 兼容旧版本
+                    movesubpages: false,  // 移动子页面
+                    ignorewarnings: false, // 不忽略警告
+                    watchlist: 'unwatch', // 不添加到监视列表
+                    noredirect: false,     // 保留重定向
+                    movetalk: true,      // 移动讨论页
+                }
+            );
+        console.log(pc.yellow(`[INFO] 已完成移动：${categoryName0}→${categoryName1})`));
+        // 修改页面中的分类
+        let pageList = await bot.request({
+            "action": "query",
+            "format": "json",
+            "list": "categorymembers",
+            "formatversion": "2",
+            "cmtitle": categoryName0,
+            "cmlimit": "max"
+        });
+        const result1 = await bot.read(categoryName1);
+        
+        const titleList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
+        for (const Title of titleList) {
+            const result2 = await bot.read(Title);
+            let wikitext = result2.revisions[0].content;
+
             // 处理分类：先尝试替换现有分类，如果没有则添加新的分类
-            const categoryPattern = /\[\[Category:中华人民共和国地方性法规(?:\|(.*?))?\]\]/g;
-            const targetCategory = `[[Category:黑龙江省地方性法规]]`;
+            const categoryPattern = /\[\[Category:中国各朝代分类(?:\|(.*?))?\]\]/g;
+            const targetCategory = `[[Category:中国各时期分类]]`;
             
             // 检查是否已经存在目标分类格式
-            const hasTargetCategory = wikitext.includes(`Category:中华人民共和国地方性法规`);
+            const hasTargetCategory = wikitext.includes(`Category:中国各时期分类`);
             
             wikitext = wikitext.replace(categoryPattern, targetCategory); // 替换旧分类为新分类
             
             wikitext = wikitext.replaceAll(categoryPattern, ''); // 移除多余的旧分类
 
-            wikitext = wikitext.replaceAll('\n[[Category:黑龙江省人大常委会]]', ''); // 移除常委会分类
-
-            if (wikitext.match(/\{\{\s*creator\s*\|\s*wikidata\s*=\s*Q97300337\s*\}\}/g)) {
-                // wikitext = wikitext.replaceAll(/\{\{\s*creator\s*\|\s*wikidata\s*=\s*Q97300337\s*\}\}/g, '[[黑龙江省人民代表大会常务委员会]]');
-                // summary += '；替换掉已停用的{{creator}}模板（Q97300337→黑龙江省人民代表大会常务委员会）';
-            }
-           //  else continue;
-           /* 
-           if (wikitext.match(/\{\{\s*creator\s*\|\s*wikidata\s*=\s*Q106033593\s*\}\}/g)) {
-                wikitext = wikitext.replaceAll(/\{\{\s*creator\s*\|\s*wikidata\s*=\s*Q106033593\s*\}\}/g, '[[黑龙江省人民代表大会]]');
-                summary += '；替换掉已停用的{{creator}}模板（Q106033593→黑龙江省人民代表大会）';
-            }*/
-
-            if (wikitext.match(/《([^《》]*)《([^《»]*)》([^《»]*)》/g)) {
-                wikitext = wikitext.replaceAll(/《([^《》]*)《([^《»]*)》([^《»]*)》/g, '《$1〈$2〉$3》'); // 修正嵌套书名号
-                summary += '；修正嵌套书名号';
-            }
-            /*
-            if (!wikitext.includes('| 范围 = 黑龙江省')) {
-                wikitext = wikitext.replaceAll(`| 类别 = 地方性法规`,
-`| 类别 = 地方性法规
-| 范围 = 黑龙江省`);
-            }
-            */
-
-            // 计算新分类出现的次数
-            const newCategoryCount = (wikitext.match(new RegExp(`\\[\\[Category:黑龙江省地方性法规\\]\\]`, 'g')) || []).length;
-            
-            if (newCategoryCount > 1 ) {
-                console.log(pc.yellow(`[WARNING] 页面包含多个黑龙江省地方性法规分类 (${Title})，开始去重...`));
-                // 去重：只保留第一个出现的分类
-                let firstFound = false;
-                wikitext = wikitext.replace(new RegExp(`\\[\\[Category:黑龙江省地方性法规\\]\\]`, 'g'), (match) => {
-                    if (!firstFound) {
-                        firstFound = true;
-                        return match; // 保留第一个
-                    }
-                    return ''; // 移除后续的重复分类
-                });
-            }
             // 如果没有变化，或变化只有空格、行数等无实质内容的修改，则跳过保存
-            if (wikitext.trim() === originalWikitext.revisions[0].content.trim()) {
+            if (wikitext.trim() === result2.revisions[0].content.trim()) {
                 console.log(pc.yellow(`[SKIP] 页面内容无实质变化，跳过保存 (${Title})`));
                 continue;
             }
@@ -202,15 +182,10 @@ async function main() {
             await bot.save(Title, wikitext, summary, options={minor:false});//, options={tags:'bot'}
             console.log(pc.green(`[SUCCESS] 已移动页面分类并添加参数：${Title}`));
 
-            await sleep(200); 
-
-        } catch (error) {
-            console.error(pc.red(`修改页面失败 (${Title}):`), error.message);
-            console.log(pc.dim(`[WAIT] 等待5秒后继续处理下一个页面...`));
-            await sleep(5000);
-            // 继续处理下一个页面，不要中断整个流程
+            await sleep(2000); 
         }
     }
+ 
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms)); // 礼貌延时
