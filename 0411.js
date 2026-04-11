@@ -129,25 +129,70 @@ async function main() {
         let categoryName1 = categoryName0.replace('中国各朝代','中国各时期');
         if (categoryName0 === categoryName1){
             console.log(`[SKIP] 相同标题，跳过移动`);
-            continue
         }
+        else{
         let summary = '批量移动分类：“中国各朝代”→“中国各时期”'
-        const result = await bot.move(
-                fromtitle=categoryName0,  // fromtitle 参数
-                totitle=categoryName1,    // totitle 参数
-                summary,    // reason/summary 参数
-                {
-                    reason: summary, // 兼容旧版本
-                    movesubpages: false,  // 移动子页面
-                    ignorewarnings: false, // 不忽略警告
-                    watchlist: 'unwatch', // 不添加到监视列表
-                    noredirect: false,     // 保留重定向
-                    movetalk: true,      // 移动讨论页
+        
+        // 执行移动操作
+        try {
+            await bot.move(categoryName0, categoryName1, summary, {
+                reason: summary,
+                movesubpages: false,
+                ignorewarnings: false,
+                watchlist: 'unwatch',
+                noredirect: false,
+                movetalk: true,
+            });
+            console.log(pc.green(`[SUCCESS] 已完成移动：${categoryName0} → ${categoryName1}`));
+        } catch (moveError) {
+            console.error(pc.red(`[ERROR] 移动页面失败 (${categoryName0}):`), moveError.message);
+            continue; // 如果移动失败，跳过后续处理
+        }
+        }
+        // 处理新分类页面的 Catnav 模板
+        try {
+            const result1 = await bot.read(categoryName1);
+            const content = result1.revisions[0].content;
+            if (content.includes('{{cr','{{Cr','{{分类重定向')){
+                console.log('分类重定向，跳过')
+            }
+            else{
+            // 处理Catnav模板：统一替换为{{Catnav|auto=1}}
+            const catnavPattern = /\{\{[Cc]atnav(?:\|[^}]*)?\}\}/g;
+            const hasCatnav = catnavPattern.test(content);
+            
+            let updatedContent = content;
+            let editSummary = '';
+
+            if (hasCatnav) {
+                // 如果存在Catnav模板，统一替换为{{Catnav|auto=1}}
+                updatedContent = content.replace(catnavPattern, '{{Catnav|auto=1}}');
+                
+                // 如果有变化则保存
+                if (updatedContent !== content) {
+                    editSummary = '统一{{Catnav}}模板参数';
+                    await bot.save(categoryName1, updatedContent, editSummary, { minor: true });
+                    console.log(pc.green(`[SUCCESS] 已更新分类页面的{{Catnav}}模板：${categoryName1}`));
+                } else {
+                    console.log(pc.yellow(`[SKIP] 分类页面{{Catnav}}模板已是目标格式：${categoryName1}`));
                 }
-            );
-        console.log(pc.yellow(`[INFO] 已完成移动：${categoryName0}→${categoryName1})`));
+            } else {
+                // 如果不存在Catnav模板，在页首添加
+                updatedContent = '{{Catnav|auto=1}}\n' + content;
+                editSummary = '添加{{Catnav}}模板';
+                await bot.save(categoryName1, updatedContent, editSummary, { minor: true });
+                console.log(pc.green(`[SUCCESS] 已在分类页面页首添加{{Catnav}}模板：${categoryName1}`));
+            }
+            
+            await sleep(1000); // 礼貌延时
+            }
+        } catch (catnavError) {
+            console.error(pc.red(`[ERROR] 处理{{Catnav}}模板失败 (${categoryName1}):`), catnavError.message);
+        }
+
         // 修改页面中的分类
-        let pageList = await bot.request({
+        // 注意：这里查询的是移动前的分类名 categoryName0，因为成员关系可能还没完全更新到新分类，或者我们需要从旧分类获取成员列表来批量修改
+        let memberPageList = await bot.request({
             "action": "query",
             "format": "json",
             "list": "categorymembers",
@@ -155,23 +200,37 @@ async function main() {
             "cmtitle": categoryName0,
             "cmlimit": "max"
         });
-        const result1 = await bot.read(categoryName1);
         
-        const titleList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
+        const titleList = memberPageList.query.categorymembers.map(page => page.title); // 提取标题列表
         for (const Title of titleList) {
             const result2 = await bot.read(Title);
             let wikitext = result2.revisions[0].content;
 
             // 处理分类：先尝试替换现有分类，如果没有则添加新的分类
-            const categoryPattern = /\[\[Category:中国各朝代分类(?:\|(.*?))?\]\]/g;
-            const targetCategory = `[[Category:中国各时期分类]]`;
+            // 从categoryName0中提取原分类名称（去掉"Category:"前缀）
+            const sourceCategoryName = categoryName0.replace(/^Category:/, '');
+            // 从categoryName1中提取目标分类名称（去掉"Category:"前缀）
+            const targetCategoryName = categoryName1.replace(/^Category:/, '');
+            
+            // 构建动态的正则表达式，匹配源分类
+            const categoryPattern = new RegExp(`\\[\\[Category:${sourceCategoryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\|(.*?))?\\]\\]`, 'g');
+            const targetCategory = `[[Category:${targetCategoryName}]]`;
             
             // 检查是否已经存在目标分类格式
-            const hasTargetCategory = wikitext.includes(`Category:中国各时期分类`);
+            const hasTargetCategory = wikitext.includes(`Category:${targetCategoryName}`);
             
-            wikitext = wikitext.replace(categoryPattern, targetCategory); // 替换旧分类为新分类
-            
-            wikitext = wikitext.replaceAll(categoryPattern, ''); // 移除多余的旧分类
+            if (!hasTargetCategory) {
+                // 如果不存在目标分类，则替换旧分类或添加新分类
+                if (categoryPattern.test(wikitext)) {
+                    // 存在旧分类，进行替换
+                    wikitext = wikitext.replace(categoryPattern, targetCategory);
+                    // 移除可能存在的其他旧分类实例
+                    wikitext = wikitext.replaceAll(categoryPattern, '');
+                } else {
+                    // 不存在任何相关分类，在末尾添加新分类
+                    wikitext = wikitext.trim() + '\n\n' + targetCategory;
+                }
+            }
 
             // 如果没有变化，或变化只有空格、行数等无实质内容的修改，则跳过保存
             if (wikitext.trim() === result2.revisions[0].content.trim()) {
@@ -179,6 +238,7 @@ async function main() {
                 continue;
             }
             
+            let summary = '批量移动分类：“中国各朝代”→“中国各时期”'
             await bot.save(Title, wikitext, summary, options={minor:false});//, options={tags:'bot'}
             console.log(pc.green(`[SUCCESS] 已移动页面分类并添加参数：${Title}`));
 
