@@ -128,7 +128,7 @@ async function main() {
         }
     }
     else {
-        const result = await bot.getPagesInCategory('Category:中華民國');
+        const result = await bot.getPagesInCategory('Category:對陣形勢圖模板');
         console.log(pc.dim('[DEBUG] getPagesInCategory 原始返回类型:'), typeof result, Array.isArray(result));
         
         // 提取标题字符串 - 确保只处理字符串

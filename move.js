@@ -115,23 +115,24 @@ async function main() {
     }
 
     // 5. 批量移动页面
-    /*
-    const list1 = [
-        '201', '202',
-        '203', '204',
-        '212', '215',
-        '224', '226',
-        '227'
-    ];*/
-    let prefix1_from = 'Template:PRC admin/data/41/14/21/210/{1}';
-    let prefix1_to = 'Template:PRC admin/data/41/14/21/112/{1}';
     
+    let list1 = [];
+    let prefix1_from = 'Template:PRC admin/data/41/02/12/205/{1}';
+    let prefix1_to = 'Template:PRC admin/data/41/02/12/108/{1}';
+    
+    var i;
+
+    for (let n = 228; n <= 230; n++){
+        list1.push(n);
+    }
     // 使用正确的 for 循环语法和 move 方法参数
-    for (let i = 201; i <= 227; i++) {
+    // for (let i = 201; i <= 227; i++) { 
+    for (i in list1) {
         try {
-            const fromTitle = prefix1_from.replace('{1}', i);
-            const toTitle = prefix1_to.replace('{1}', i);
-            const summary = '批量移动（撤乡设镇导致的行政区划代码变更）[[Qiuwen_talk:茶馆/编辑#请求进行批量移动]]）';
+            const item = list1[i]; // 获取数组的实际值（"001", "002"等）
+            const fromTitle = prefix1_from.replace('{1}', item);
+            const toTitle = prefix1_to.replace('{1}', item);
+            const summary = '批量移动（撤乡设镇导致的行政区划代码变更，见[[Special:固定链接/10682476#请求批量移动|Qiuwen_talk:茶馆/编辑#请求批量移动]]）';
             
             // 使用正确的命名参数语法
             const result = await bot.move(
@@ -150,8 +151,8 @@ async function main() {
             
             console.log(pc.green(`已将页面 ${fromTitle} 移动到 ${toTitle}`));
             
-            console.log(pc.dim(`[WAIT] 等待2秒后继续...`));
-            await sleep(2000); 
+            console.log(pc.dim(`[WAIT] 等待6秒后继续...`));
+            await sleep(6000); 
 
         } catch (error) {
             console.error(pc.red(`移动页面失败 (${prefix1_from.replace('{1}', i)}):`), error.message);

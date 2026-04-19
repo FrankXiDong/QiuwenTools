@@ -120,17 +120,35 @@ async function main() {
         "format": "json",
         "list": "categorymembers",
         "formatversion": "2",
-        "cmtitle": "Category:中国各时期分类",
+        "cmtitle": "Category:中国各时期政治",
         "cmlimit": "max"
     })
     const categoryList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
     
     for (let categoryName0 of categoryList) {
-        let categoryName1 = categoryName0.replace('中国各朝代','中国各时期');
-        if (categoryName0 === categoryName1){
-            console.log(`[SKIP] 相同标题，跳过移动`);
+        // 确保输入为字符串类型并清理
+        if (typeof categoryName0 !== 'string' || !categoryName0.trim()) {
+            console.log(pc.yellow(`[SKIP] 无效的分类名称，跳过: ${JSON.stringify(categoryName0)}`));
+            continue;
         }
-        else{
+        
+        categoryName0 = categoryName0.trim();
+        
+        // 检查是否包含非法字符
+        const illegalCharsPattern = /[{}<>|*#]/;
+        if (illegalCharsPattern.test(categoryName0)) {
+            console.log(pc.yellow(`[SKIP] 分类名称包含非法字符，跳过: ${categoryName0}`));
+            continue;
+        }
+        
+        // 全局替换"中国各朝代"为"中国各时期"
+        let categoryName1 = categoryName0.replace(/中国各朝代/g, '中国各时期');
+        
+        if (categoryName0 === categoryName1){
+            console.log(pc.yellow(`[SKIP] 相同标题，跳过移动: ${categoryName0}`));
+            continue;
+        }
+        
         let summary = '批量移动分类：“中国各朝代”→“中国各时期”'
         
         // 执行移动操作
@@ -148,46 +166,48 @@ async function main() {
             console.error(pc.red(`[ERROR] 移动页面失败 (${categoryName0}):`), moveError.message);
             continue; // 如果移动失败，跳过后续处理
         }
-        }
-        // 处理新分类页面的 Catnav 模板
-        try {
-            const result1 = await bot.read(categoryName1);
-            const content = result1.revisions[0].content;
-            if (content.includes('{{cr','{{Cr','{{分类重定向')){
-                console.log('分类重定向，跳过')
-            }
-            else{
-            // 处理Catnav模板：统一替换为{{Catnav|auto=1}}
-            const catnavPattern = /\{\{[Cc]atnav(?:\|[^}]*)?\}\}/g;
-            const hasCatnav = catnavPattern.test(content);
-            
-            let updatedContent = content;
-            let editSummary = '';
-
-            if (hasCatnav) {
-                // 如果存在Catnav模板，统一替换为{{Catnav|auto=1}}
-                updatedContent = content.replace(catnavPattern, '{{Catnav|auto=1}}');
-                
-                // 如果有变化则保存
-                if (updatedContent !== content) {
-                    editSummary = '统一{{Catnav}}模板参数';
-                    await bot.save(categoryName1, updatedContent, editSummary, { minor: true });
-                    console.log(pc.green(`[SUCCESS] 已更新分类页面的{{Catnav}}模板：${categoryName1}`));
-                } else {
-                    console.log(pc.yellow(`[SKIP] 分类页面{{Catnav}}模板已是目标格式：${categoryName1}`));
+        
+        if (categoryName1.includes('Category:')){
+            // 处理新分类页面的 Catnav 模板
+            try {
+                const result1 = await bot.read(categoryName1);
+                const content = result1.revisions[0].content;
+                if (content.includes('{{cr','{{Cr','{{分类重定向')){
+                    console.log('分类重定向，跳过')
                 }
-            } else {
-                // 如果不存在Catnav模板，在页首添加
-                updatedContent = '{{Catnav|auto=1}}\n' + content;
-                editSummary = '添加{{Catnav}}模板';
-                await bot.save(categoryName1, updatedContent, editSummary, { minor: true });
-                console.log(pc.green(`[SUCCESS] 已在分类页面页首添加{{Catnav}}模板：${categoryName1}`));
+                else{
+                // 处理Catnav模板：统一替换为{{Catnav|auto=1}}
+                const catnavPattern = /\{\{[Cc]atnav(?:\|[^}]*)?\}\}/g;
+                const hasCatnav = catnavPattern.test(content);
+                
+                let updatedContent = content;
+                let editSummary = '';
+
+                if (hasCatnav) {
+                    // 如果存在Catnav模板，统一替换为{{Catnav|auto=1}}
+                    updatedContent = content.replace(catnavPattern, '{{Catnav|auto=1}}');
+                    
+                    // 如果有变化则保存
+                    if (updatedContent !== content) {
+                        editSummary = '统一{{Catnav}}模板参数';
+                        await bot.save(categoryName1, updatedContent, editSummary, { minor: true });
+                        console.log(pc.green(`[SUCCESS] 已更新分类页面的{{Catnav}}模板：${categoryName1}`));
+                    } else {
+                        console.log(pc.yellow(`[SKIP] 分类页面{{Catnav}}模板已是目标格式：${categoryName1}`));
+                    }
+                } else {
+                    // 如果不存在Catnav模板，在页首添加
+                    updatedContent = '{{Catnav|auto=1}}\n' + content;
+                    editSummary = '添加{{Catnav}}模板';
+                    await bot.save(categoryName1, updatedContent, editSummary, { minor: true });
+                    console.log(pc.green(`[SUCCESS] 已在分类页面页首添加{{Catnav}}模板：${categoryName1}`));
+                }
+                
+                await sleep(3000); // 礼貌延时
+                }
+            } catch (catnavError) {
+                console.error(pc.red(`[ERROR] 处理{{Catnav}}模板失败 (${categoryName1}):`), catnavError.message);
             }
-            
-            await sleep(1000); // 礼貌延时
-            }
-        } catch (catnavError) {
-            console.error(pc.red(`[ERROR] 处理{{Catnav}}模板失败 (${categoryName1}):`), catnavError.message);
         }
 
         // 修改页面中的分类
@@ -242,7 +262,7 @@ async function main() {
             await bot.save(Title, wikitext, summary, options={minor:false});//, options={tags:'bot'}
             console.log(pc.green(`[SUCCESS] 已移动页面分类并添加参数：${Title}`));
 
-            await sleep(2000); 
+            await sleep(4000); 
         }
     }
  
