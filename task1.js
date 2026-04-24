@@ -121,7 +121,7 @@ async function main() {
         "format": "json",
         "list": "categorymembers",
         "formatversion": "2",
-        "cmtitle": "Category:中国各时期政治",
+        "cmtitle": "Category:中国各时期文献",
         "cmlimit": "max"
     })
     const categoryList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
@@ -230,8 +230,6 @@ async function main() {
     }
  
 }
-
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms)); // 礼貌延时
 
 main().catch(error => {
     console.error(pc.red('[FATAL] 脚本执行出错:'), error);
