@@ -37,3 +37,6 @@ pending_reviews.txt
 summary.md
 
 tool.py
+
+test/
+test/*
