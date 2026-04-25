@@ -115,7 +115,7 @@ async function main() {
         process.exit(1);
     }
 
-    importList = `亞洲U18男子排球錦標賽`
+    importList = `亞洲U18男子排球錦標賽`// 可替换为多行页面标题（每行一个页面）
     .split('\n')
     for (const page of importList) {
         // 如果页面已经存在，警告，请求用户确认是否导入
