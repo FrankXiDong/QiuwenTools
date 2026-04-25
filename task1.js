@@ -121,7 +121,7 @@ async function main() {
         "format": "json",
         "list": "categorymembers",
         "formatversion": "2",
-        "cmtitle": "Category:中国各时期文献",
+        "cmtitle": "Category:中国各时期政府机构", // 在此处修改需要清理、批量移动的母分类
         "cmlimit": "max"
     })
     const categoryList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
