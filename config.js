@@ -6,7 +6,7 @@ module.exports = {
     
     // User账号配置（用于需要人工身份的操作）
     user: {
-        userAgent: process.env.USER_USER_AGENT || 'QiuwenUser/1.0 (Node.js/mwn; +https://www.qiuwenbaike.cn/User:YourUsername)',
+        userAgent: process.env.USER_USER_AGENT || 'Qiuwen/1.1 (Node.js/mwn; +https://www.qiuwenbaike.cn/User:YourUsername)',
         clientId: process.env.USER_OAUTH2_CLIENT_ID,
         clientSecret: process.env.USER_OAUTH2_CLIENT_SECRET,
         accessToken: process.env.USER_OAUTH2_ACCESS_TOKEN,
@@ -14,7 +14,7 @@ module.exports = {
     
     // Bot账号配置（用于自动化批量操作）
     bot: {
-        userAgent: process.env.BOT_USER_AGENT || 'QiuwenBot/1.1 (Node.js/mwn; +https://www.qiuwenbaike.cn/User:FDtool)',
+        userAgent: process.env.BOT_USER_AGENT || 'Qiuwen/1.1 (Node.js/mwn; +https://www.qiuwenbaike.cn/User:FDtool)',
         clientId: process.env.BOT_OAUTH2_CLIENT_ID,
         clientSecret: process.env.BOT_OAUTH2_CLIENT_SECRET,
         accessToken: process.env.BOT_OAUTH2_ACCESS_TOKEN,

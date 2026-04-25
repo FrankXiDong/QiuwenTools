@@ -1,20 +1,15 @@
 /*
- * 报告“[[Category:求闻百科积压工作]]”及其所有子分类（多层级）共包括多少个页面
+ * 报告"[[Category:求闻百科积压工作]]"及其所有子分类（多层级）共包括多少个页面
  * 使用 mwn 获取分类成员，递归遍历子分类并统计命名空间 0 的页面。
  */
 
-const { Mwn } = require('mwn');
-const config = require('./config');
+const { createBot } = require('./auth');
 const pc = require('picocolors');
 
 async function main() {
-    const bot = new Mwn({
-        apiUrl: config.apiUrl,
-        userAgent: config.move_bot.userAgent,
-        defaultParams: {
-            maxlag: 5
-        }
-    });
+    // 创建 bot 实例（使用 bot 账号进行自动化批量操作）
+    console.log(pc.blue('[INFO] 初始化 Bot 账号...'));
+    const bot = await createBot('bot');
 
     const rootCategory = 'Category:求闻百科积压工作';
     const seenCategories = new Set();
@@ -48,7 +43,7 @@ async function main() {
                         // 根分类的所有一级子分类都入队
                         queue.push({ title: item.title, depth: 1 });
                     } else if (depth === 1) {
-                        // 只有一级子分类名称包含“分类”时，才允许其子分类入队（即深度2）
+                        // 只有一级子分类名称包含"分类"时，才允许其子分类入队（即深度2）
                         if (item.title.includes('分类')) {
                             queue.push({ title: item.title, depth: 2 });
                         }
