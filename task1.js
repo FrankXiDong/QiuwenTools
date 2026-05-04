@@ -16,7 +16,7 @@ async function main() {
         "format": "json",
         "list": "categorymembers",
         "formatversion": "2",
-        "cmtitle": "Category:中国各时期司法", // 在此处修改需要清理、批量移动的母分类
+        "cmtitle": "Category:中国各时期人物", // 在此处修改需要清理、批量移动的母分类
         "cmlimit": "max"
     });
     
