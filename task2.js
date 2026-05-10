@@ -17,7 +17,7 @@ async function main() {
         "format": "json",
         "list": "categorymembers",
         "formatversion": "2",
-        "cmtitle": "Category:中华人民共和国建立后入党的中国共产党党员", // 在此处修改需要清理、批量移动的母分类
+        "cmtitle": "Category:各年加入中国共产党的人物", // 在此处修改需要清理、批量移动的母分类
         "cmlimit": "max"
     });
     
