@@ -98,7 +98,7 @@ async function main() {
                 // 处理新分类页面的 Catnav 模板
                 await handleCatnavTemplate(bot, targetCategory, 3000);
 
-                sleep(5000);
+                sleep(5000); //  等待5秒
                 
             } catch (error) {
                 console.error(pc.red(`[ERROR] 处理分类失败 (${categoryName0}):`), error.message);

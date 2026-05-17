@@ -1,6 +1,7 @@
 const { Mwn } = require('mwn');
 const config = require('./config');
 const pc = require('picocolors');
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * 获取 OAuth 2.0 访问令牌
@@ -43,7 +44,7 @@ async function getOAuth2Token(accountType = 'bot') {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': account.userAgent
+                'User-Agent': account.userAgent,
             },
             body: new URLSearchParams({
                 grant_type: 'client_credentials',
@@ -61,6 +62,10 @@ async function getOAuth2Token(accountType = 'bot') {
 
         const data = await response.json();
         console.log(pc.green('[SUCCESS] 成功获取 OAuth2 令牌'));
+        
+        // 礼貌延时，避免频繁请求
+        await sleep(1000);
+        
         return data.access_token;
     } catch (e) {
         console.error(pc.red('[FATAL] 无法获取 OAuth 2.0 令牌'), e);
@@ -130,8 +135,14 @@ async function createBot(accountType = 'bot') {
         console.log(pc.blue('[INFO] 验证登录状态并获取编辑令牌...'));
         await bot.getTokens(); // 这会发送一个 meta=tokens 请求，利用 Bearer token 认证
         
+        // 礼貌延时，确保服务器稳定
+        await sleep(500);
+        
         const user = await bot.userinfo();
         console.log(pc.green(`[INFO] 登录成功，当前身份: ${user.name} (${accountType}账号)`));
+        
+        // 再次延时，为后续操作留出缓冲
+        await sleep(500);
         
         return bot;
     } catch (e) {
@@ -142,5 +153,6 @@ async function createBot(accountType = 'bot') {
 
 module.exports = {
     getOAuth2Token,
-    createBot
+    createBot,
+    sleep
 };
