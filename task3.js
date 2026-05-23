@@ -80,9 +80,9 @@ async function main() {
     });
     
     // 生成 wikitext 格式的有序列表
-    let wikitext= '以下是最近30天内活跃用户的编辑次数排名：\n\n';
+    let wikitext= '以下是最近30天内活跃用户的操作数（含编辑、导入、移动等操作）排名：\n\n';
     wikitext += '{| class="wikitable sortable"\n';
-    wikitext += '! 排名 !! 用户名 !! 近30日编辑数\n';
+    wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
     wikitext += '|-\n';
     
     sortedUsers.forEach((user, index) => {
@@ -97,6 +97,7 @@ async function main() {
     
     wikitext += '|}\n\n== 说明 ==\n';
     wikitext += '* 本页面由机器人自动更新，数据基于最近30天的编辑活动。\n';
+    wikitext += '* 本页面API数据与[[Special:活跃用户]]理论上相同，如有误可能是系统缓存问题。\n';
     
     // 获取 CST 时间（中国标准时间，UTC+8）
     const now = new Date();
