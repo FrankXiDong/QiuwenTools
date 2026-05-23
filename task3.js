@@ -105,6 +105,8 @@ async function main() {
     const cstTimeString = cstTime.toISOString().replace('T', ' ').substring(0, 19) + ' (CST)';
     
     wikitext += '* 更新时间：' + cstTimeString + '\n';
+
+    wikitext += '\n{{求闻百科信息页}}';
     
     // 5. 写入"NEA:近30日编辑数排名"页面（防止重复写入，如已有内容则替换掉，否则直接写入或创建该页面）
     console.log(pc.blue('[INFO] 正在写入页面 "NEA:近30日编辑数排名"...'));
