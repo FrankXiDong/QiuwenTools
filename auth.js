@@ -64,7 +64,7 @@ async function getOAuth2Token(accountType = 'bot') {
         console.log(pc.green('[SUCCESS] 成功获取 OAuth2 令牌'));
         
         // 礼貌延时，避免频繁请求
-        await sleep(1000);
+        await sleep(2000);
         
         return data.access_token;
     } catch (e) {
@@ -136,13 +136,13 @@ async function createBot(accountType = 'bot') {
         await bot.getTokens(); // 这会发送一个 meta=tokens 请求，利用 Bearer token 认证
         
         // 礼貌延时，确保服务器稳定
-        await sleep(500);
+        await sleep(1500);
         
         const user = await bot.userinfo();
         console.log(pc.green(`[INFO] 登录成功，当前身份: ${user.name} (${accountType}账号)`));
         
         // 再次延时，为后续操作留出缓冲
-        await sleep(500);
+        await sleep(1000);
         
         return bot;
     } catch (e) {

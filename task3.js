@@ -1,0 +1,160 @@
+/* [机器人任务3]  */
+
+const { createBot } = require('./auth');
+const pc = require('picocolors');
+const { handleCatnavTemplate, sleep } = require('./catnav-handler');
+const { moveCategoryMembers } = require('./move-category-members');
+
+// 封装主逻辑，增加错误处理，确保脚本退出状态正确
+async function main() {
+    // 1. 创建 bot 实例（使用 bot 账号进行自动化批量操作）
+    console.log(pc.blue('[INFO] 初始化 Bot 账号...'));
+    const bot = await createBot('bot');
+
+    // 2. 使用 continue 功能获取所有活跃用户
+    console.log(pc.blue('[INFO] 开始获取所有活跃用户...'));
+    
+    let allUsers = [];
+    let continueParams = null;
+    let pageCount = 0;
+    
+    do {
+        // 构建查询参数
+        const queryParams = {
+            "list": "allusers",
+            "formatversion": "2",
+            "auactiveusers": 1,
+            "aulimit": 500  // 每次获取最大数量
+        };
+        
+        // 如果有继续参数，添加到查询中
+        if (continueParams) {
+            Object.assign(queryParams, continueParams);
+        }
+        
+        // 执行查询
+        const result = await bot.query(queryParams);
+        
+        // 提取用户数据
+        if (result.query && result.query.allusers) {
+            const users = result.query.allusers;
+            
+            // 只保留 name 和 recentactions 字段
+            const filteredUsers = users.map(user => ({
+                name: user.name,
+                recentactions: user.recentactions
+            }));
+            
+            allUsers = allUsers.concat(filteredUsers);
+            pageCount += filteredUsers.length;
+            
+            console.log(pc.green(`[INFO] 已获取 ${pageCount} 个活跃用户...`));
+        }
+        
+        // 检查是否有继续参数
+        continueParams = result.continue || null;
+        
+        // 礼貌延时，避免触发速率限制
+        await sleep(2000);
+        
+    } while (continueParams);
+    
+    // 3. 将用户列表转换为字典（以 name 为键）
+    console.log(pc.blue('[INFO] 正在构建用户字典...'));
+    const userDict = {};
+    allUsers.forEach(user => {
+        userDict[user.name] = {
+            name: user.name,
+            recentactions: user.recentactions
+        };
+    });
+    
+
+    
+    // 4. 按近期编辑数排序，并转为wikitext文本格式（使用有序列表） 
+    console.log(pc.blue('[INFO] 正在按编辑数排序并生成维基文本...'));
+    
+    // 将字典转换为数组并按 recentactions 降序排序
+    const sortedUsers = Object.values(userDict).sort((a, b) => {
+        return (b.recentactions || 0) - (a.recentactions || 0);
+    });
+    
+    // 生成 wikitext 格式的有序列表
+    let wikitext= '以下是最近30天内活跃用户的编辑次数排名：\n\n';
+    wikitext += '{| class="wikitable sortable"\n';
+    wikitext += '! 排名 !! 用户名 !! 近30日编辑数\n';
+    wikitext += '|-\n';
+    
+    sortedUsers.forEach((user, index) => {
+        const rank = index + 1;
+        const username = user.name;
+        const actions = user.recentactions || 0;
+        
+        // 使用 [[User:用户名]] 格式创建用户链接
+        wikitext += `| ${rank} || [[User:${username}|${username}]] || ${actions}\n`;
+        wikitext += '|-\n';
+    });
+    
+    wikitext += '|}\n\n== 说明 ==\n';
+    wikitext += '* 本页面由机器人自动更新，数据基于最近30天的编辑活动。\n';
+    
+    // 获取 CST 时间（中国标准时间，UTC+8）
+    const now = new Date();
+    const cstTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // UTC+8
+    const cstTimeString = cstTime.toISOString().replace('T', ' ').substring(0, 19) + ' (CST)';
+    
+    wikitext += '* 更新时间：' + cstTimeString + '\n';
+    
+    // 5. 写入"NEA:近30日编辑数排名"页面（防止重复写入，如已有内容则替换掉，否则直接写入或创建该页面）
+    console.log(pc.blue('[INFO] 正在写入页面 "NEA:近30日编辑数排名"...'));
+    
+    const pageName = 'NEA:近30日编辑数排名';
+    
+    try {
+        // 读取现有页面内容
+        let existingContent = '';
+        try {
+            const existingPage = await bot.read(pageName);
+            existingContent = existingPage.revisions[0].content;
+            console.log(pc.yellow(`[INFO] 检测到已存在的页面，准备更新内容...`));
+        } catch (readError) {
+            // 页面不存在，将创建新页面
+            console.log(pc.green(`[INFO] 页面不存在，将创建新页面...`));
+        }
+        
+        // 比较内容是否相同
+        if (existingContent === wikitext) {
+            console.log(pc.yellow(`[SKIP] 页面内容与当前生成的内容相同，无需更新。`));
+        } else {
+            // 保存页面
+            const editSummary = '机器人自动更新：近30日活跃用户编辑数排名';
+            await bot.save(pageName, wikitext, editSummary, { minor: true });
+            console.log(pc.green(`[SUCCESS] 已成功${existingContent ? '更新' : '创建'}页面：${pageName}`));
+        }
+        
+        // 礼貌延时
+        await sleep(2000);
+        
+    } catch (saveError) {
+        console.error(pc.red(`[ERROR] 保存页面时出错：${saveError.message}`));
+        throw saveError;
+    }
+
+    // 6. 输出统计信息
+    totalActions = sortedUsers.reduce((acc, user) => acc + (user.recentactions || 0), 0);
+    avgActions = totalActions / sortedUsers.length;
+    console.log(pc.blue('\n========== 统计信息 =========='));
+    console.log(pc.green(`总活跃用户数：${sortedUsers.length}`));
+    console.log(pc.green(`最高编辑数：${sortedUsers.length > 0 ? sortedUsers[0].recentactions : 0} (${sortedUsers.length > 0 ? sortedUsers[0].name : 'N/A'})`));
+    console.log(pc.green(`最低编辑数：${sortedUsers.length > 0 ? sortedUsers[sortedUsers.length - 1].recentactions : 0}`));
+    console.log(pc.green(`平均编辑数：${avgActions}`));
+    console.log(pc.green(`总编辑次数：${totalActions}`));
+    console.log(pc.blue('================================\n'));
+    
+    return userDict;
+}
+
+main().catch(error => {
+    console.error(pc.red('[FATAL] 脚本执行出错:'), error);
+    process.exit(1);
+}); // 捕获主函数未处理的异常

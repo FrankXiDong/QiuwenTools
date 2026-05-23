@@ -74,6 +74,8 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 
                 // 保存修改
                 const editSummary = `分类成员转移：从 [[${sourceCategory}]] 移至 [[${targetCategory}]]`;
+
+                await sleep(sleepTime/2);
                 await bot.save(pageTitle, content, editSummary, { minor: true });
                 
                 console.log(pc.green(`[SUCCESS] 已转移成员: ${pageTitle}`));
@@ -85,7 +87,7 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
             }
             
             // 延时，避免触发速率限制
-            await sleep(sleepTime);
+            await sleep(sleepTime/2);
         }
         
         console.log(pc.green(`[COMPLETE] 分类成员转移完成: 成功 ${stats.success}, 跳过 ${stats.skipped}, 失败 ${stats.failed}`));

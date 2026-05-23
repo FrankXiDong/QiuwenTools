@@ -1,4 +1,4 @@
-/* [机器人任务1] 批量移动分类："中国各朝代"→"中国各时期" */
+/* [机器人任务2] 批量移动分类 */
 
 const { createBot } = require('./auth');
 const pc = require('picocolors');
@@ -67,6 +67,8 @@ async function main() {
                     format: 'json',
                     titles: targetCategory
                 });
+
+                sleep(1000);
                 
                 const pages = checkResult.query.pages;
                 const pageId = Object.keys(pages)[0];
