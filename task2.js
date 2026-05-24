@@ -11,6 +11,14 @@ async function main() {
     console.log(pc.blue('[INFO] 初始化 Bot 账号...'));
     const bot = await createBot('bot');
 
+    // 检查是否提供了运行参数以控制单分类模式
+    const singleMode = process.argv[2] === '--single' || process.argv[2] === '-s';
+    
+    let categoryList = [];
+    
+    // 始终从母分类获取所有子分类
+    console.log(pc.blue('[INFO] 从母分类获取所有子分类...'));
+    
     // 2. 获取分类列表
     let pageList = await bot.request({
         "action": "query",
@@ -21,15 +29,22 @@ async function main() {
         "cmlimit": "max"
     });
     
-    const categoryList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
+    categoryList = pageList.query.categorymembers.map(page => page.title); // 提取标题列表
 
-    // 排除不是分类的页面
-    categoryList.forEach(categoryName0 => {
+    // 排除不是分类的页面 (使用 filter 避免 forEach splice 的索引问题)
+    categoryList = categoryList.filter(categoryName0 => {
         if (!categoryName0.includes('Category:')) {
             console.debug(pc.yellow(`[SKIP] 非分类页面，跳过：${categoryName0}`));
-            categoryList.splice(categoryList.indexOf(categoryName0), 1); // 从列表中删除非分类页面
+            return false;
         }
+        return true;
     });
+
+    if (singleMode) {
+        console.log(pc.cyan(`[INFO] 单分类模式：将只处理第一个符合条件的分类`));
+    } else {
+        console.log(pc.blue(`[INFO] 批量模式：将处理所有 ${categoryList.length} 个分类`));
+    }
     
     // 3. 批量处理分类
     for (let categoryName0 of categoryList) {
@@ -68,7 +83,7 @@ async function main() {
                     titles: targetCategory
                 });
 
-                sleep(1000);
+                await sleep(1000);
                 
                 const pages = checkResult.query.pages;
                 const pageId = Object.keys(pages)[0];
@@ -76,6 +91,12 @@ async function main() {
                 
                 if (targetExists) {
                     console.log(pc.yellow(`[SKIP] 目标分类已存在: ${targetCategory}，跳过移动`));
+                    
+                    // 如果是单分类模式且目标已存在，继续查找下一个符合条件的分类
+                    if (singleMode) {
+                        console.log(pc.yellow('[INFO] 单分类模式：此分类已处理过，继续查找下一个符合条件的分类'));
+                        continue;
+                    }
                     continue;
                 }
                 
@@ -100,17 +121,32 @@ async function main() {
                 // 处理新分类页面的 Catnav 模板
                 await handleCatnavTemplate(bot, targetCategory, 3000);
 
-                sleep(5000); //  等待5秒
+                await sleep(5000); //  等待5秒
+                
+                // 如果是单分类模式，处理完一个后退出
+                if (singleMode) {
+                    console.log(pc.green('[INFO] 单分类模式：任务已完成'));
+                    return;
+                }
                 
             } catch (error) {
                 console.error(pc.red(`[ERROR] 处理分类失败 (${categoryName0}):`), error.message);
+                
+                // 如果是单分类模式且出错，也退出
+                if (singleMode) {
+                    console.log(pc.red('[INFO] 单分类模式：因错误而终止'));
+                    return;
+                }
                 continue;
             }
         } else {
             console.log(pc.yellow(`[SKIP] 不匹配年份分类模式，跳过: ${categoryName0}`));
         }
     }
- 
+
+    if (singleMode) {
+        console.log(pc.yellow('[INFO] 单分类模式：未找到符合条件的分类'));
+    }
 }
 
 main().catch(error => {

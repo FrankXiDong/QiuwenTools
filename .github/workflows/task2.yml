@@ -1,8 +1,8 @@
-name: Run task3.js
+name: Run task2.js
 
 on:
-  schedule:
-    - cron: '0 4 * * *'
+  #schedule:
+  #  - cron: '0 4 * * *'
   workflow_dispatch: # 允许手动触发
   #push:
   #  branches:
@@ -38,4 +38,4 @@ jobs:
         BOT_OAUTH2_CLIENT_ID: ${{ secrets.BOT_OAUTH2_CLIENT_ID }}
         BOT_OAUTH2_CLIENT_SECRET : ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
         BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
-      run: node task3.js
+      run: node task2.js
