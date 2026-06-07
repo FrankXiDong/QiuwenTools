@@ -2,6 +2,7 @@
 
 const pc = require('picocolors');
 const { sleep } = require('./catnav-handler');
+const { createBot } = require('./auth');
 
 /**
  * 将源分类中的所有成员转移到目标分类
@@ -149,3 +150,115 @@ function escapeRegex(string) {
 module.exports = {
     moveCategoryMembers
 };
+
+// 如果直接运行此脚本，则执行命令行模式
+if (require.main === module) {
+    const args = process.argv.slice(2);
+    
+    // 解析命令行参数
+    let sourceCategory = null;
+    let targetCategory = null;
+    let sleepTime = 2500; // 默认延时 2.5 秒
+    let accountType = 'bot'; // 默认使用 bot 账号
+    
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        
+        if (arg.startsWith('--source=')) {
+            sourceCategory = arg.substring('--source='.length);
+        } else if (arg.startsWith('--target=')) {
+            targetCategory = arg.substring('--target='.length);
+        } else if (arg.startsWith('--sleep=')) {
+            sleepTime = parseInt(arg.substring('--sleep='.length));
+            if (isNaN(sleepTime) || sleepTime < 0) {
+                console.error(pc.red('[ERROR] 无效的延时时间，必须是非负整数'));
+                process.exit(1);
+            }
+        } else if (arg.startsWith('--account=')) {
+            accountType = arg.substring('--account='.length);
+            if (accountType !== 'user' && accountType !== 'bot') {
+                console.error(pc.red('[ERROR] 无效的账号类型，必须是 "user" 或 "bot"'));
+                process.exit(1);
+            }
+        } else if (arg === '--help' || arg === '-h') {
+            printUsage();
+            process.exit(0);
+        }
+    }
+    
+    // 验证必需参数
+    if (!sourceCategory || !targetCategory) {
+        console.error(pc.red('[ERROR] 缺少必需参数'));
+        printUsage();
+        process.exit(1);
+    }
+    
+    // 确保分类名称包含 "Category:" 前缀
+    if (!sourceCategory.startsWith('Category:') && !sourceCategory.startsWith('category:')) {
+        sourceCategory = 'Category:' + sourceCategory;
+    }
+    if (!targetCategory.startsWith('Category:') && !targetCategory.startsWith('category:')) {
+        targetCategory = 'Category:' + targetCategory;
+    }
+    
+    console.log(pc.cyan('[INFO] 启动分类成员转移工具'));
+    console.log(pc.cyan(`[INFO] 源分类: ${sourceCategory}`));
+    console.log(pc.cyan(`[INFO] 目标分类: ${targetCategory}`));
+    console.log(pc.cyan(`[INFO] 延时时间: ${sleepTime}ms`));
+    console.log(pc.cyan(`[INFO] 账号类型: ${accountType}`));
+    
+    // 执行转移操作
+    (async () => {
+        try {
+            // 创建 bot 实例
+            const bot = await createBot(accountType);
+            
+            // 执行分类成员转移
+            const stats = await moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTime);
+            
+            console.log(pc.green('\n[COMPLETE] 所有操作完成！'));
+            console.log(pc.green(`成功: ${stats.success}, 跳过: ${stats.skipped}, 失败: ${stats.failed}`));
+            
+            process.exit(stats.failed > 0 ? 1 : 0);
+            
+        } catch (error) {
+            console.error(pc.red('[FATAL ERROR]'), error.message);
+            console.error(error.stack);
+            process.exit(1);
+        }
+    })();
+}
+
+/**
+ * 打印使用说明
+ */
+function printUsage() {
+    console.log(`
+分类成员转移工具 - 将源分类的所有成员转移到目标分类
+
+用法:
+  node move-category-members.js --source=<源分类> --target=<目标分类> [选项]
+
+必需参数:
+  --source=<分类名>      源分类名称（可带或不带 "Category:" 前缀）
+  --target=<分类名>      目标分类名称（可带或不带 "Category:" 前缀）
+
+可选参数:
+  --sleep=<毫秒数>       每次操作后的延时时间（默认: 5000）
+  --account=<类型>       使用的账号类型: "user" 或 "bot"（默认: "bot"）
+  --help, -h             显示此帮助信息
+
+示例:
+  # 基本用法
+  node move-category-members.js --source="Category:旧分类" --target="Category:新分类"
+  
+  # 不带前缀的分类名
+  node move-category-members.js --source="旧分类" --target="新分类"
+  
+  # 自定义延时时间（3秒）
+  node move-category-members.js --source="旧分类" --target="新分类" --sleep=3000
+  
+  # 使用 user 账号
+  node move-category-members.js --source="旧分类" --target="新分类" --account=user
+`);
+}

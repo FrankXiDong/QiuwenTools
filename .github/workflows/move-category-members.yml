@@ -1,0 +1,82 @@
+name: 分类成员转移
+
+on:
+  workflow_dispatch: # 允许手动触发
+    inputs:
+      source_category:
+        description: '源分类名称（可带或不带 "Category:" 前缀）'
+        required: true
+        type: string
+        default: 'Category:旧分类'
+      target_category:
+        description: '目标分类名称（可带或不带 "Category:" 前缀）'
+        required: true
+        type: string
+        default: 'Category:新分类'
+      sleep_time:
+        description: '每次操作后的延时时间（毫秒）'
+        required: false
+        type: number
+        default: 5000
+      account_type:
+        description: '使用的账号类型'
+        required: false
+        type: choice
+        options:
+          - bot
+        default: 'bot'
+
+jobs:
+  move-category-members:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run Category Members Transfer
+      env:
+        # 使用 GitHub Secrets 存储敏感信息
+        API_URL: ${{ secrets.API_URL }}
+        USER_AGENT: ${{ secrets.USER_AGENT }}
+        BOT_USER_AGENT: ${{ secrets.BOT_USER_AGENT }}
+        
+        # User 账号认证信息
+        USER_OAUTH2_ACCESS_TOKEN: ${{ secrets.USER_OAUTH2_ACCESS_TOKEN }}
+        USER_OAUTH2_CLIENT_ID: ${{ secrets.USER_OAUTH2_CLIENT_ID }}
+        USER_OAUTH2_CLIENT_SECRET: ${{ secrets.USER_OAUTH2_CLIENT_SECRET }}
+        
+        # Bot 账号认证信息
+        BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
+        BOT_OAUTH2_CLIENT_ID: ${{ secrets.BOT_OAUTH2_CLIENT_ID }}
+        BOT_OAUTH2_CLIENT_SECRET: ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
+      run: |
+        echo "=========================================="
+        echo "开始执行分类成员转移任务"
+        echo "源分类: ${{ github.event.inputs.source_category }}"
+        echo "目标分类: ${{ github.event.inputs.target_category }}"
+        echo "延时时间: ${{ github.event.inputs.sleep_time }}ms"
+        echo "账号类型: ${{ github.event.inputs.account_type }}"
+        echo "=========================================="
+        
+        node move-category-members.js \
+          --source="${{ github.event.inputs.source_category }}" \
+          --target="${{ github.event.inputs.target_category }}" \
+          --sleep=${{ github.event.inputs.sleep_time }} \
+          --account=${{ github.event.inputs.account_type }}
+      
+      continue-on-error: false
