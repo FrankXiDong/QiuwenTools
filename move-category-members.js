@@ -9,10 +9,10 @@ const { createBot } = require('./auth');
  * @param {Object} bot - Mwn bot实例
  * @param {string} sourceCategory - 源分类名称（完整标题，包含 "Category:" 前缀）
  * @param {string} targetCategory - 目标分类名称（完整标题，包含 "Category:" 前缀）
- * @param {number} sleepTime - 每次操作后的延时时间（毫秒），默认5000
+ * @param {number} sleepTime - 每次操作后的延时时间（毫秒），默认3000
  * @returns {Promise<Object>} 返回统计信息 { success: number, failed: number, skipped: number }
  */
-async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTime = 5000) {
+async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTime = 3000) {
     const stats = { success: 0, failed: 0, skipped: 0 };
     
     console.log(pc.cyan(`[INFO] 开始转移分类成员: ${sourceCategory} → ${targetCategory}`));
