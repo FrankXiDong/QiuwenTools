@@ -28,6 +28,32 @@ const { batchHandleCatnavTemplates } = require('./catnav-handler');
 const result = await batchHandleCatnavTemplates(bot, categories, 3000);
 ```
 
+### 错误日志记录模块
+
+- **文件**: `log.js`
+- **测试**: `test-log.js`
+
+该模块提供了统一的错误日志记录功能，将错误信息写入用户的个人页面（Special:MyPage/errorlog）：
+- 自动检查并创建日志页面
+- 以有序列表格式追加错误信息
+- 支持附加详细的错误上下文
+- 异步操作，不阻塞主流程
+
+**使用示例**:
+```javascript
+const { logError } = require('./log');
+
+// 简单错误
+await logError(bot, '分类移动失败: Category:测试');
+
+// 带详细信息的错误
+await logError(bot, 'API请求失败', {
+  code: 'http',
+  message: error.message,
+  stack: error.stack
+});
+```
+
 ## 主要脚本
 
 - `task1.js`: 批量移动分类并处理 Catnav 模板
