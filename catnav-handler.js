@@ -32,12 +32,22 @@ async function handleCatnavTemplate(bot, categoryName, sleepTime = 3000) {
             // 如果存在Catnav模板，统一替换为{{Catnav|auto=1}}
             updatedContent = content.replace(catnavPattern, '{{Catnav|auto=1}}');
             
-            // 如果有变化则保存
+            // 如果有变化且不是仅大小写变化，则保存
             if (updatedContent !== content) {
-                editSummary = '统一{{Catnav}}模板参数';
-                await bot.save(categoryName, updatedContent, editSummary, { minor: true });
-                console.log(pc.green(`[SUCCESS] 已更新分类页面的{{Catnav}}模板：${categoryName}`));
-                hasChanges = true;
+                // 检查是否只是模板名大小写变化（内容实质未变）
+                const oldTemplate = content.match(/\{\{[Cc]atnav(?:\|[^}]*)?\}\}/)?.[0];
+                const isOnlyCaseChange = oldTemplate && 
+                    oldTemplate.toLowerCase().replace('{{catnav', '').replace('}}', '') === 
+                    '{{Catnav|auto=1}}'.toLowerCase().replace('{{catnav', '').replace('}}', '');
+                
+                if (isOnlyCaseChange) {
+                    console.log(pc.yellow(`[SKIP] 分类页面{{Catnav}}模板仅大小写不同，跳过编辑：${categoryName}`));
+                } else {
+                    editSummary = '统一{{Catnav}}模板参数';
+                    await bot.save(categoryName, updatedContent, editSummary, { minor: true });
+                    console.log(pc.green(`[SUCCESS] 已更新分类页面的{{Catnav}}模板：${categoryName}`));
+                    hasChanges = true;
+                }
             } else {
                 console.log(pc.yellow(`[SKIP] 分类页面{{Catnav}}模板已是目标格式：${categoryName}`));
             }
