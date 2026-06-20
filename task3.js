@@ -70,9 +70,8 @@ async function main() {
     });
     
 
-    
     // 4. 按近期编辑数排序，并转为wikitext文本格式（使用有序列表） 
-    console.log(pc.blue('[INFO] 正在按编辑数排序并生成维基文本...'));
+    console.log(pc.blue('[INFO] 正在按编辑数排序并生成wikitext文本...'));
     
     // 将字典转换为数组并按 recentactions 降序排序
     const sortedUsers = Object.values(userDict).sort((a, b) => {
@@ -81,7 +80,7 @@ async function main() {
     
     // 生成 wikitext 格式的有序列表
     let wikitext= '以下是最近30天内活跃用户的操作数（含编辑、导入、移动等操作）排名：\n\n';
-    wikitext += '{| class="wikitable sortable"\n';
+    wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
     wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
     wikitext += '|-\n';
     
@@ -90,14 +89,14 @@ async function main() {
         const username = user.name;
         const actions = user.recentactions || 0;
         
-        // 使用 [[User:用户名]] 格式创建用户链接
-        wikitext += `| ${rank} || [[User:${username}|${username}]] || ${actions}\n`;
+        // 使用 {{Usertcl}} 格式创建用户链接
+        wikitext += `| ${rank} || {{Usertcl|${username}}} || ${actions}\n`;
         wikitext += '|-\n';
     });
     
     wikitext += '|}\n\n== 说明 ==\n';
-    wikitext += '* 本页面由机器人自动更新（一般每天凌晨4:00左右更新），数据基于最近30天的编辑活动。\n';
-    wikitext += '* 本页面API数据与[[Special:活跃用户]]理论上相同，如有误可能是系统缓存问题。\n';
+    wikitext += '* 本页面由机器人自动更新（一般每天<del>凌晨4:00左右</del>更新），数据基于最近30天的编辑活动。\n';
+    wikitext += '* 本页面API数据与[[Special:活跃用户]]理论上相同，如有误可能是MediaWiki系统的缓存问题，机器人操作者无法修复。\n';
     
     // 获取 CST 时间（中国标准时间，UTC+8）
     const now = new Date();
