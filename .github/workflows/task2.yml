@@ -1,8 +1,6 @@
 name: Run task2.js
 
 on:
-  schedule:
-    - cron: '0 12 * * *'
   workflow_dispatch: # 允许手动触发
   #push:
   #  branches:
