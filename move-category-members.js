@@ -50,27 +50,31 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                     continue;
                 }
                 
-                // 构建要添加的目标分类链接
-                const targetCatLink = `[[${targetCategory}]]`;
-                
-                // 移除源分类标记（包括可能的排序键参数）
+                // 直接替换源分类为目标分类（保留原有的排序键参数）
                 const sourceCatName = sourceCategory.replace(/^Category:/i, '');
                 // 匹配多种分类命名空间前缀：Category、Cat、分类、類別
                 const categoryPrefixPattern = '(?:Category|Cat|分[类類])';
-                const sourceCatPattern = new RegExp(`\\[\\[${categoryPrefixPattern}:${escapeRegex(sourceCatName)}(?:\\|[^[]*)?\\]\\]\\s*`, 'gi');
-                content = content.replace(sourceCatPattern, '');
+                const sourceCatPattern = new RegExp(`\\[\\[${categoryPrefixPattern}:${escapeRegex(sourceCatName)}((?:\\|[^[]*)?)\\]\\]`, 'gi');
                 
-                // 在页面末尾添加目标分类（如果还没有分类的话）
-                // 查找最后一个分类标记的位置（支持多种前缀）
-                const lastCatMatch = content.match(/\[\[(?:Category|Cat|分[类類]):[^[]+\]\]/gi);
-                if (lastCatMatch && lastCatMatch.length > 0) {
-                    // 如果已有分类，在最后一个分类后添加
-                    const lastCatIndex = content.lastIndexOf(lastCatMatch[lastCatMatch.length - 1]);
-                    const insertPos = lastCatIndex + lastCatMatch[lastCatMatch.length - 1].length;
-                    content = content.slice(0, insertPos) + '\n' + targetCatLink + content.slice(insertPos);
+                // 使用替换函数，保留管道符和排序键参数
+                const hasReplacement = content.includes(sourceCatName);
+                if (hasReplacement) {
+                    content = content.replace(sourceCatPattern, `[[${targetCategory}$1]]`);
+                    console.log(pc.blue(`[INFO] 已替换分类标记: ${pageTitle}`));
                 } else {
-                    // 如果没有分类，在页面末尾添加
-                    content = content.trimEnd() + '\n\n' + targetCatLink + '\n';
+                    // 如果页面中没有源分类标记，则在末尾添加目标分类
+                    const targetCatLink = `[[${targetCategory}]]`;
+                    const lastCatMatch = content.match(/\[\[(?:Category|Cat|分[类類]):[^[]+\]\]/gi);
+                    if (lastCatMatch && lastCatMatch.length > 0) {
+                        // 如果已有分类，在最后一个分类后添加
+                        const lastCatIndex = content.lastIndexOf(lastCatMatch[lastCatMatch.length - 1]);
+                        const insertPos = lastCatIndex + lastCatMatch[lastCatMatch.length - 1].length;
+                        content = content.slice(0, insertPos) + '\n' + targetCatLink + content.slice(insertPos);
+                    } else {
+                        // 如果没有分类，在页面末尾添加
+                        content = content.trimEnd() + '\n\n' + targetCatLink + '\n';
+                    }
+                    console.log(pc.blue(`[INFO] 已添加目标分类: ${pageTitle}`));
                 }
                 
                 // 保存修改

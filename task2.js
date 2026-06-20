@@ -4,6 +4,7 @@ const { createBot } = require('./auth');
 const pc = require('picocolors');
 const { handleCatnavTemplate, sleep } = require('./catnav-handler');
 const { moveCategoryMembers } = require('./move-category-members');
+const { fixDoubleRedirects } = require('./fix-double-redirects');
 
 // 封装主逻辑，增加错误处理，确保脚本退出状态正确
 async function main() {
@@ -113,6 +114,10 @@ async function main() {
                 });
                 
                 console.log(pc.green(`[SUCCESS] 已完成移动：${categoryName0} → ${targetCategory}`));
+                
+                // 修复可能存在的双重定向问题
+                console.log(pc.cyan(`[INFO] 检查并修复双重定向...`));
+                await fixDoubleRedirects(bot, categoryName0, 3000);
                 
                 // 转移原分类的成员到新分类
                 console.log(pc.cyan(`[INFO] 开始转移分类成员...`));

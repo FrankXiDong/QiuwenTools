@@ -24,7 +24,7 @@ async function main() {
         }
     }
     else {
-        const result = await bot.getPagesInCategory('Category:中华人民共和国教育家');
+        const result = await bot.getPagesInCategory('Category:未被条目使用的合理使用文件');
         console.log(pc.dim('[DEBUG] getPagesInCategory 原始返回类型:'), typeof result, Array.isArray(result));
         
         // 提取标题字符串 - 确保只处理字符串
