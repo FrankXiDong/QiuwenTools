@@ -100,7 +100,7 @@ async function main() {
             continue;
         }
         
-        let summary = '批量移动分类："中国各朝代"→"中国各时期"';
+        let summary = '半自动：批量移动分类（"中国各朝代"→"中国各时期）（task1）"';
         
         // 执行移动操作
         try {

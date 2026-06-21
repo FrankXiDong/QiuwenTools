@@ -102,7 +102,7 @@ async function main() {
                 }
                 
                 // 目标分类不存在，执行移动操作（将创建新的目标分类）
-                const summary = `批量移动分类（[[Qiuwen_talk:茶馆/存档/编辑/2026年04月#关于Category:依入党年份分类的中国共产党党员]]"`;
+                const summary = `机器人：批量移动分类（[[Qiuwen_talk:茶馆/存档/编辑/2026年04月#关于Category:依入党年份分类的中国共产党党员]]）（task2）"`;
                 
                 await bot.move(categoryName0, targetCategory, summary, {
                     reason: summary,

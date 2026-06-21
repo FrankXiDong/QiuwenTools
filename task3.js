@@ -129,7 +129,7 @@ async function main() {
             console.log(pc.yellow(`[SKIP] 页面内容与当前生成的内容相同，无需更新。`));
         } else {
             // 保存页面
-            const editSummary = '机器人自动更新：近30日活跃用户编辑数排名';
+            const editSummary = '机器人：自动更新近30日活跃用户编辑数排名（task3）';
             await bot.save(pageName, wikitext, editSummary, { minor: true });
             console.log(pc.green(`[SUCCESS] 已成功${existingContent ? '更新' : '创建'}页面：${pageName}`));
         }
