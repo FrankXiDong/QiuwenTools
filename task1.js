@@ -4,8 +4,61 @@ const { createBot } = require('./auth');
 const pc = require('picocolors');
 const { handleCatnavTemplate, sleep } = require('./catnav-handler');
 
+// 解析命令行参数
+function parseArgs() {
+    const args = process.argv.slice(2);
+    
+    // 检查帮助参数
+    if (args.includes('--help') || args.includes('-h')) {
+        console.log(`
+使用方法: node task1.js --category <分类名称> [选项]
+
+必需参数:
+  --category <分类名称>    需要处理的母分类名称（可带或不带 "Category:" 前缀）
+
+可选参数:
+  --help, -h              显示此帮助信息
+
+示例:
+  node task1.js --category "Category:中国各时期人物"
+  node task1.js --category "中国各时期人物"
+        `.trim());
+        process.exit(0);
+    }
+    
+    // 查找 --category 参数
+    const categoryIndex = args.indexOf('--category');
+    if (categoryIndex === -1) {
+        console.error(pc.red('[ERROR] 缺少必需参数: --category'));
+        console.error(pc.yellow('请使用 --help 查看使用说明'));
+        process.exit(1);
+    }
+    
+    if (categoryIndex + 1 >= args.length) {
+        console.error(pc.red('[ERROR] --category 参数后必须指定分类名称'));
+        console.error(pc.yellow('请使用 --help 查看使用说明'));
+        process.exit(1);
+    }
+    
+    let categoryName = args[categoryIndex + 1];
+    
+    // 自动补全 Category: 前缀
+    if (!categoryName.startsWith('Category:') && !categoryName.startsWith('category:')) {
+        categoryName = 'Category:' + categoryName;
+    }
+    
+    return {
+        category: categoryName
+    };
+}
+
 // 封装主逻辑，增加错误处理，确保脚本退出状态正确
 async function main() {
+    // 解析命令行参数
+    const { category } = parseArgs();
+    
+    console.log(pc.blue(`[INFO] 目标分类: ${category}`));
+    
     // 1. 创建 bot 实例（使用 bot 账号进行自动化批量操作）
     console.log(pc.blue('[INFO] 初始化 Bot 账号...'));
     const bot = await createBot('bot');
@@ -16,7 +69,7 @@ async function main() {
         "format": "json",
         "list": "categorymembers",
         "formatversion": "2",
-        "cmtitle": "Category:中国各时期人物", // 在此处修改需要清理、批量移动的母分类
+        "cmtitle": category,
         "cmlimit": "max"
     });
     
