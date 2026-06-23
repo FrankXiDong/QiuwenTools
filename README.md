@@ -57,8 +57,39 @@ await logError(bot, 'API请求失败', {
 ## 主要脚本
 
 - `task1.js`: 批量移动分类并处理 Catnav 模板
+- `task2.js`: 分类移动与成员转移（集成双重重定向修复）
+- `task3.js`: 其他自动化任务
+- `task4.js`: **批量移除Wayback模板**（新增）
 - `cat.js`, `cat01.js`: 分类相关处理脚本
 - `move.js`: 页面移动脚本
 - `purge.js`: 页面清理脚本
 - `import.js`: 数据导入脚本
 - `count-category-pages.js`: 分类页面统计
+
+### Task4 - Wayback模板移除
+
+`task4.js` 用于批量移除Wiki页面中的Wayback模板（网页存档链接）。
+
+**功能特点**：
+- 自动查询所有使用Wayback模板的页面
+- 兼容各种大小写形式（`{{Wayback}}`、`{{wayback}}`、`{{WAYBACK}}`等）
+- 智能清理多余空行和空白
+- 详细的执行日志和统计报告
+- 支持GitHub Actions自动化运行
+
+**使用方法**：
+```bash
+# 基本用法
+node task4.js
+
+# 自定义延时
+node task4.js --sleep_time 6000
+
+# 查看帮助
+node task4.js --help
+```
+
+**详细文档**：
+- [TASK4_USAGE.md](./markdown/TASK4_USAGE.md) - 完整使用说明
+- [TASK4_QUICK_REF.md](./.github/workflows/task4.yml) - 快速参考指南
+- [.github/workflows/task4.yml](./.github/workflows/task4.yml) - GitHub Actions配置
