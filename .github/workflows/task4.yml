@@ -14,7 +14,6 @@ on:
         type: choice
         options:
           - bot
-          - user
         default: 'bot'
       limit:
         description: '最多处理的页面数量（留空表示处理所有页面）'
@@ -70,8 +69,9 @@ jobs:
         echo "=========================================="
         
         node task4.js \
-          --sleep_time=${{ github.event.inputs.sleep_time }} \
-          --account_type=${{ github.event.inputs.account_type }} \
+          --sleep_time ${{ github.event.inputs.sleep_time }} \
+          --account_type ${{ github.event.inputs.account_type }} \
+          --limit ${{ github.event.inputs.limit }} \
           $LIMIT_ARG
       
       continue-on-error: false
