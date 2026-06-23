@@ -1,7 +1,7 @@
 /* [工具函数] 分类成员转移模块 */
 
 const pc = require('picocolors');
-const { sleep } = require('./catnav-handler');
+const { sleep } = require('../catnav-handler');
 const { createBot } = require('./auth');
 
 /**

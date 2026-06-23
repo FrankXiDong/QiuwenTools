@@ -7,7 +7,7 @@
 ### Catnav 模板处理模块
 
 - **文件**: `catnav-handler.js`
-- **文档**: [CATNAV-HANDLER.md](./CATNAV-HANDLER.md)
+- **文档**: [CATNAV-HANDLER.md](./markdown/ATNAV-HANDLER.md)
 - **测试**: `test-catnav.js`
 
 该模块提供了处理 MediaWiki 分类页面中 Catnav 模板的功能，包括：
