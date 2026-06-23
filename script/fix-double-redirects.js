@@ -247,7 +247,7 @@ if (require.main === module) {
     (async () => {
         try {
             // 创建 bot 实例
-            const { createBot } = require('./auth');
+            const { createBot } = require('../auth');
             const bot = await createBot(accountType);
             
             // 批量修复双重定向

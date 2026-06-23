@@ -2,7 +2,7 @@
 
 const pc = require('picocolors');
 const { sleep } = require('./catnav-handler');
-const { createBot } = require('./auth');
+const { createBot } = require('../auth');
 
 /**
  * 将源分类中的所有成员转移到目标分类
