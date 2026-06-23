@@ -248,7 +248,7 @@ async function main() {
             }
             
             // 保存修改后的内容
-            const editSummary = '机器人任务：移除Wayback模板（task4）';
+            const editSummary = '机器人：批量移除已弃用的{{Wayback}}模板（task4）';
             
             try {
                 await bot.save(pageTitle, newContent, editSummary, {
