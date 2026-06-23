@@ -1,7 +1,7 @@
 /* [工具函数] 修复双重/多重重定向模块 */
 
 const pc = require('picocolors');
-const { sleep } = require('../catnav-handler');
+const { sleep } = require('./catnav-handler');
 
 /**
  * 修复双重或多重重定向

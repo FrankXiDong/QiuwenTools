@@ -2,7 +2,7 @@
 
 const { createBot } = require('./auth');
 const pc = require('picocolors');
-const { handleCatnavTemplate, sleep } = require('./catnav-handler');
+const { handleCatnavTemplate, sleep } = require('./script/catnav-handler');
 const { moveCategoryMembers } = require('./script/move-category-members');
 const { fixDoubleRedirects } = require('./script/fix-double-redirects');
 
