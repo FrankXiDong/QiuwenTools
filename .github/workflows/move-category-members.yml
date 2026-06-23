@@ -64,7 +64,7 @@ jobs:
         echo "延时时间: ${{ github.event.inputs.sleep_time }}ms"
         echo "账号类型: ${{ github.event.inputs.account_type }}"
         echo "=========================================="
-        
+        cd scripts
         node move-category-members.js \
           --source="${{ github.event.inputs.source_category }}" \
           --target="${{ github.event.inputs.target_category }}" \
