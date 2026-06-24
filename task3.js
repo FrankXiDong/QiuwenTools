@@ -2,7 +2,7 @@
 
 const { createBot } = require('./auth');
 const pc = require('picocolors');
-const { handleCatnavTemplate, sleep } = require('./catnav-handler');
+const { handleCatnavTemplate, sleep } = require('./script/catnav-handler');
 const { moveCategoryMembers } = require('./move-category-members');
 
 // 封装主逻辑，增加错误处理，确保脚本退出状态正确
