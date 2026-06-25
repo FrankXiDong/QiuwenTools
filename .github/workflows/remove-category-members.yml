@@ -56,21 +56,8 @@ jobs:
         BOT_OAUTH2_CLIENT_SECRET: ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
         BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
       run: |
-        echo "=========================================="
-        echo "开始执行分类成员移除任务"
-        echo "目标分类: ${{ github.event.inputs.category }}"
-        echo "延时时间: ${{ github.event.inputs.sleep_time }}ms"
-        echo "账号类型: ${{ github.event.inputs.account_type }}"
-        if [ -n "${{ github.event.inputs.limit }}" ]; then
-          echo "处理限制: 最多处理 ${{ github.event.inputs.limit }} 个页面"
-        else
-          echo "处理限制: 无限制（处理所有页面）"
-        fi
-        echo "=========================================="
-        
         # 构建命令参数
-        CMD="cd scirpt
-        node remove-category-members.js --category=\"${{ github.event.inputs.category }}\" --sleep_time=${{ github.event.inputs.sleep_time }} --account_type=${{ github.event.inputs.account_type }}"
+        CMD="node ./script/remove-category-members.js --category=\"${{ github.event.inputs.category }}\" --sleep_time=${{ github.event.inputs.sleep_time }} --account_type=${{ github.event.inputs.account_type }}"
         
         # 如果设置了limit，添加limit参数
         if [ -n "${{ github.event.inputs.limit }}" ]; then
