@@ -52,7 +52,7 @@ function parseArgs() {
     }
     
     // 解析可选参数
-    let sleepTime = 5000; // 默认5秒延时
+    let sleepTime = 2000; // 默认2秒延时
     let accountType = 'bot'; // 默认使用bot账号
     let limit = null; // 默认无限制
     
@@ -117,9 +117,10 @@ function removeCategoryFromContent(content, categoryName) {
     
     // 构建正则表达式，支持多种分类命名空间前缀
     // 匹配: [[Category:xxx]], [[Cat:xxx]], [[分类:xxx]]
-    // 保留管道符参数: [[Category:xxx|排序键]]
+    // 支持带排序索引: [[Category:xxx|排序键]]
+    // 支持前后空白和换行符
     const categoryPrefixPattern = '(?:Category|Cat|分[类類])';
-    const catPattern = new RegExp(`\\[\\[${categoryPrefixPattern}:${escapeRegex(catName)}((?:\\|[^[]*)?)\\]\\]\n`, 'gi');
+    const catPattern = new RegExp(`\\s*\\[\\[${categoryPrefixPattern}:${escapeRegex(catName)}(?:\\|[^\\]]*)?\\]\\]\\s*`, 'gi');
     
     // 多次执行以确保移除所有匹配项
     let previousContent;
@@ -133,7 +134,7 @@ function removeCategoryFromContent(content, categoryName) {
     
     // 清理可能留下的多余空行和空白
     // 将多个连续空行替换为最多一个换行
-    newContent = newContent.replace(/\n\s*\n\s*\n+/g, '\n');
+    newContent = newContent.replace(/\n\s*\n\s*\n+/g, '\n\n');
 
     // 清理首尾空白
     newContent = newContent.trim();

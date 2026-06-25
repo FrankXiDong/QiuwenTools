@@ -11,7 +11,7 @@ on:
         description: '每次操作后的延时时间（毫秒）'
         required: false
         type: number
-        default: 5000
+        default: 2000
       account_type:
         description: '使用的账号类型'
         required: false
