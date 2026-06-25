@@ -60,6 +60,7 @@ await logError(bot, 'API请求失败', {
 - `task2.js`: 分类移动与成员转移（集成双重重定向修复）
 - `task3.js`: 其他自动化任务
 - `task4.js`: **批量移除Wayback模板**（新增）
+- `remove-category-members.js`: **批量将分类成员从分类中移除**（新增）
 - `cat.js`, `cat01.js`: 分类相关处理脚本
 - `move.js`: 页面移动脚本
 - `purge.js`: 页面清理脚本
@@ -93,3 +94,38 @@ node task4.js --help
 - [TASK4_USAGE.md](./markdown/TASK4_USAGE.md) - 完整使用说明
 - [TASK4_QUICK_REF.md](./.github/workflows/task4.yml) - 快速参考指南
 - [.github/workflows/task4.yml](./.github/workflows/task4.yml) - GitHub Actions配置
+
+### Remove Category Members - 分类成员移除工具
+
+`remove-category-members.js` 用于批量将指定分类的所有成员从该分类中移除。
+
+**功能特点**：
+- 自动获取分类下的所有成员（支持分页）
+- 从每个成员页面中移除指定的分类标记
+- 支持多种分类命名空间前缀（Category、Cat、分类、類別）
+- 保留管道符参数（如排序键）
+- 批量处理，支持限制处理数量
+- 详细的日志输出和错误处理
+- 支持自定义延时时间，避免触发 API 速率限制
+
+**使用方法**：
+```bash
+# 基本用法（带或不带 Category: 前缀均可）
+node remove-category-members.js --category="Category:待清理分类"
+node remove-category-members.js --category="待清理分类"
+
+# 限制处理数量
+node remove-category-members.js --category="待清理分类" --limit 10
+
+# 自定义延时
+node remove-category-members.js --category="待清理分类" --sleep_time 6000
+
+# 使用 user 账号
+node remove-category-members.js --category="待清理分类" --account_type user
+
+# 查看帮助
+node remove-category-members.js --help
+```
+
+**详细文档**：
+- [REMOVE_CATEGORY_MEMBERS_USAGE.md](./markdown/REMOVE_CATEGORY_MEMBERS_USAGE.md) - 完整使用说明
