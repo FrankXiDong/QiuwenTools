@@ -23,6 +23,7 @@ async function main() {
         const queryParams = {
             "list": "allusers",
             "formatversion": "2",
+	        "auprop": "groups",
             "auactiveusers": 1,
             "aulimit": 500  // 每次获取最大数量
         };
@@ -38,11 +39,11 @@ async function main() {
         // 提取用户数据
         if (result.query && result.query.allusers) {
             const users = result.query.allusers;
-            
             // 只保留 name 和 recentactions 字段
             const filteredUsers = users.map(user => ({
                 name: user.name,
-                recentactions: user.recentactions
+                recentactions: user.recentactions,
+                isbot: user.groups && user.groups.includes("bot") ? true : false,
             }));
             
             allUsers = allUsers.concat(filteredUsers);
@@ -65,7 +66,8 @@ async function main() {
     allUsers.forEach(user => {
         userDict[user.name] = {
             name: user.name,
-            recentactions: user.recentactions
+            recentactions: user.recentactions,
+            isbot: user.isbot,
         };
     });
     
@@ -148,7 +150,38 @@ async function main() {
         }
         wikitext += '|-\n';
     });
+    wikitext += '|}';
+
+    // 生成排除机器人的榜单
+    wikitext += '\n\n以下为排除机器人后的榜单：\n\n';
+    wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
+    wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
+    wikitext += '|-\n';
     
+    // 先过滤掉机器人，再遍历生成排名
+    const nonBotUsers = sortedUsers.filter(user => {
+        return !user.isbot && !user.name.includes('bot') && !user.name.includes('求闻百科社区') && !user.name.includes('New user page');
+    });
+    
+    nonBotUsers.forEach((user, index) => {
+        const rank = index + 1;
+        const username = user.name;
+        const actions = user.recentactions || 0;
+        
+        // 检查用户是否为退休用户
+        const isRetired = retiredUsersSet.has(username);
+        // 使用 {{User3}} 格式创建用户链接
+        if (isRetired) {
+            // 退休用户：添加删除线和标注
+            wikitext += `| ${rank} || <del>{{User3|${username}}}</del>'''（已[[Template:retired|退休]]）''' || ${actions}\n`;
+        } else {
+            // 正常用户
+            wikitext += `| ${rank} || {{User3|${username}}} || ${actions}\n`;
+        }
+        wikitext += '|-\n';
+    });
+
+    // 说明
     wikitext += '|}\n\n== 说明 ==\n';
     wikitext += '* 本页面由机器人自动更新（一般每天<del>凌晨4:00左右</del>更新），数据基于最近30天的编辑活动。\n';
     wikitext += '* 本页面API数据与[[Special:活跃用户]]理论上相同，如有误可能是MediaWiki系统的缓存问题，机器人操作者无法修复。\n';
