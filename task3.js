@@ -69,8 +69,54 @@ async function main() {
         };
     });
     
+    // 4. 获取"求闻百科不再活跃用户"分类的成员列表
+    console.log(pc.blue('[INFO] 正在获取"求闻百科不再活跃用户"分类成员...'));
+    const retiredUsersSet = new Set();
+    
+    try {
+        const retiredCategoryName = 'Category:求闻百科不再活跃用户';
+        let continueParams = null;
+        
+        do {
+            const params = {
+                action: 'query',
+                format: 'json',
+                list: 'categorymembers',
+                cmtitle: retiredCategoryName,
+                cmlimit: 'max',
+                cmtype: 'page'
+            };
+            
+            if (continueParams) {
+                Object.assign(params, continueParams);
+            }
+            
+            const result = await bot.request(params);
+            
+            if (result.query && result.query.categorymembers) {
+                result.query.categorymembers.forEach(member => {
+                    // 提取用户名（去掉 "User:" 前缀）
+                    if (member.title.startsWith('User:')) {
+                        const username = member.title.substring(5);
+                        retiredUsersSet.add(username);
+                    }
+                });
+                console.log(pc.green(`[INFO] 已获取 ${result.query.categorymembers.length} 个退休用户（累计: ${retiredUsersSet.size}）`));
+            }
+            
+            continueParams = result.continue || null;
+            await sleep(1000);
+            
+        } while (continueParams);
+        
+        console.log(pc.green(`[COMPLETE] 共找到 ${retiredUsersSet.size} 个退休用户`));
+        
+    } catch (error) {
+        console.error(pc.red('[ERROR] 获取退休用户列表失败:'), error.message);
+        console.log(pc.yellow('[WARN] 将继续执行，但不会标记退休用户'));
+    }
 
-    // 4. 按近期编辑数排序，并转为wikitext文本格式（使用有序列表） 
+    // 5. 按近期编辑数排序，并转为wikitext文本格式（使用有序列表） 
     console.log(pc.blue('[INFO] 正在按编辑数排序并生成wikitext文本...'));
     
     // 将字典转换为数组并按 recentactions 降序排序
@@ -89,8 +135,17 @@ async function main() {
         const username = user.name;
         const actions = user.recentactions || 0;
         
-        // 使用 {{Usertcl}} 格式创建用户链接
-        wikitext += `| ${rank} || {{Usertcl|${username}}} || ${actions}\n`;
+        // 检查用户是否为退休用户
+        const isRetired = retiredUsersSet.has(username);
+        
+        // 使用 {{User3}} 格式创建用户链接
+        if (isRetired) {
+            // 退休用户：添加删除线和标注
+            wikitext += `| ${rank} || <del>{{User3|${username}}}</del>'''（已[[Template:retired|退休]]）''' || ${actions}\n`;
+        } else {
+            // 正常用户
+            wikitext += `| ${rank} || {{User3|${username}}} || ${actions}\n`;
+        }
         wikitext += '|-\n';
     });
     
@@ -107,7 +162,7 @@ async function main() {
 
     wikitext += '\n{{求闻百科信息页|cat}}';
     
-    // 5. 写入"NEA:近30日编辑数排名"页面（防止重复写入，如已有内容则替换掉，否则直接写入或创建该页面）
+    // 6. 写入"NEA:近30日编辑数排名"页面（防止重复写入，如已有内容则替换掉，否则直接写入或创建该页面）
     console.log(pc.blue('[INFO] 正在写入页面 "NEA:近30日编辑数排名"...'));
     
     const pageName = 'NEA:近30日编辑数排名';
@@ -142,7 +197,7 @@ async function main() {
         throw saveError;
     }
 
-    // 6. 输出统计信息
+    // 7. 输出统计信息
     totalActions = sortedUsers.reduce((acc, user) => acc + (user.recentactions || 0), 0);
     avgActions = totalActions / sortedUsers.length;
     console.log(pc.blue('\n========== 统计信息 =========='));
@@ -151,6 +206,7 @@ async function main() {
     console.log(pc.green(`最低编辑数：${sortedUsers.length > 0 ? sortedUsers[sortedUsers.length - 1].recentactions : 0}`));
     console.log(pc.green(`平均编辑数：${avgActions}`));
     console.log(pc.green(`总编辑次数：${totalActions}`));
+    console.log(pc.green(`退休用户数：${retiredUsersSet.size}`));
     console.log(pc.blue('================================\n'));
     
     return userDict;
