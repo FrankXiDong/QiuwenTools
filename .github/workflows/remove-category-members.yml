@@ -57,7 +57,7 @@ jobs:
         BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
       run: |
         # 构建命令参数
-        CMD="node ./script/remove-category-members.js --category=\"${{ github.event.inputs.category }}\" --sleep_time=${{ github.event.inputs.sleep_time }} --account_type=${{ github.event.inputs.account_type }}"
+        CMD="node ./script/remove-category-members.js --category=\"${{ github.event.inputs.category }}\" --sleep_time ${{ github.event.inputs.sleep_time }} --account_type ${{ github.event.inputs.account_type }}"
         
         # 如果设置了limit，添加limit参数
         if [ -n "${{ github.event.inputs.limit }}" ]; then

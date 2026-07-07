@@ -17,7 +17,7 @@ function parseArgs() {
   --category <分类名>      要移出成员的分类名称（可带或不带 "Category:" 前缀）
 
 可选参数:
-  --sleep_time <毫秒>      每次操作后的延时时间（默认: 5000ms）
+  --sleep_time <毫秒>      每次操作后的延时时间（默认: 2000ms）
   --account_type <类型>    使用的账号类型: 'user' 或 'bot'（默认: 'user'）
   --limit <数量>           最多处理的页面数量（默认: 无限制，处理所有页面）
   --help, -h              显示此帮助信息
@@ -25,9 +25,9 @@ function parseArgs() {
 示例:
   node remove-category-members.js --category="Category:待清理分类"
   node remove-category-members.js --category="待清理分类" --limit 10
-  node remove-category-members.js --category="待清理分类" --sleep_time 6000
+  node remove-category-members.js --category="待清理分类" --sleep_time 1000
   node remove-category-members.js --category="待清理分类" --account_type user
-  node remove-category-members.js --category="待清理分类" --limit 50 --sleep_time 4000
+  node remove-category-members.js --category="待清理分类" --limit 50 --sleep_time 1000
         `.trim());
         process.exit(0);
     }
