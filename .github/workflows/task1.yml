@@ -58,7 +58,6 @@ jobs:
         echo "账号类型: ${{ github.event.inputs.account_type }}"
         echo "=========================================="
         
-        node task1.js \
-          --category="${{ github.event.inputs.category }}"
+        node task1.js --category "${{ github.event.inputs.category }}"
       
       continue-on-error: false
