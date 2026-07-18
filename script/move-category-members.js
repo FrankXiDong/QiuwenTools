@@ -90,7 +90,7 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 const editSummary = `分类成员转移：从 [[${sourceCategory}]] 移至 [[${targetCategory}]]`;
 
                 await sleep(sleepTime/2);
-                await bot.save(pageTitle, content, editSummary, { minor: true , tag: 'Bot'});
+                await bot.save(pageTitle, content, editSummary, { minor: true , tags: 'Bot'});
                 
                 console.log(pc.green(`[SUCCESS] 已转移成员: ${pageTitle}`));
                 stats.success++;
