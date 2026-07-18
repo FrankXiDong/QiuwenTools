@@ -2,8 +2,8 @@
 
 const { createBot } = require('./auth');
 const pc = require('picocolors');
-const { handleCatnavTemplate, sleep } = require('./catnav-handler');
-const { moveCategoryMembers } = require('./move-category-members');
+const { handleCatnavTemplate, sleep } = require('./script/catnav-handler');
+const { moveCategoryMembers } = require('./script/move-category-members');
 
 // 解析命令行参数
 function parseArgs() {
