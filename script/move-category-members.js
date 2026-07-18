@@ -3,6 +3,7 @@
 const pc = require('picocolors');
 const { sleep } = require('./catnav-handler');
 const { createBot } = require('../auth');
+const { allowBots } = require('./check-bot-permission');
 
 /**
  * 将源分类中的所有成员转移到目标分类
@@ -39,6 +40,15 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 // 读取页面内容
                 const pageData = await bot.read(pageTitle);
                 let content = pageData.revisions[0].content;
+                
+                // 检查机器人编辑权限
+                const botUsername = bot.config.username || 'Bot';
+                if (!allowBots(content, botUsername)) {
+                    console.log(pc.red(`[SKIP] 页面禁止机器人编辑，跳过: ${pageTitle}`));
+                    stats.skipped++;
+                    await sleep(sleepTime);
+                    continue;
+                }
                 
                 // 检查是否已经包含目标分类（支持多种前缀）
                 const targetCatName = targetCategory.replace(/^Category:/i, '');
@@ -81,7 +91,7 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 const editSummary = `分类成员转移：从 [[${sourceCategory}]] 移至 [[${targetCategory}]]`;
 
                 await sleep(sleepTime/2);
-                await bot.save(pageTitle, content, editSummary, { minor: true });
+                await bot.save(pageTitle, content, editSummary, { minor: true , tag: 'Bot'});
                 
                 console.log(pc.green(`[SUCCESS] 已转移成员: ${pageTitle}`));
                 stats.success++;

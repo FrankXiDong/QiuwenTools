@@ -28,7 +28,8 @@ Thumbs.db
 *.sw?
 
 # Test files
-test-*.js
+test-*
+temp-*
 
 pending_data.json
 updated_pages.json

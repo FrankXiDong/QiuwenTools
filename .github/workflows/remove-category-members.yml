@@ -18,6 +18,7 @@ on:
         type: choice
         options:
           - bot
+          - user
         default: 'bot'
       limit:
         description: '最多处理的页面数量（留空表示无限制）'
@@ -51,10 +52,14 @@ jobs:
       env:
         # 使用 GitHub Secrets 存储敏感信息
         API_URL: ${{ secrets.API_URL }}
-        BOT_USER_AGENT: ${{ secrets.BOT_USER_AGENT }}
+        BOT_USER_AGENT : ${{ secrets.BOT_USER_AGENT }}
         BOT_OAUTH2_CLIENT_ID: ${{ secrets.BOT_OAUTH2_CLIENT_ID }}
-        BOT_OAUTH2_CLIENT_SECRET: ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
+        BOT_OAUTH2_CLIENT_SECRET : ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
         BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
+        USER_USER_AGENT: ${{ secrets.USER_USER_AGENT }}
+        USER_OAUTH2_CLIENT_ID: ${{ secrets.USER_OAUTH2_CLIENT_ID }}
+        USER_OAUTH2_CLIENT_SECRET: ${{ secrets.USER_OAUTH2_CLIENT_SECRET }}
+        USER_OAUTH2_ACCESS_TOKEN: ${{ secrets.USER_OAUTH2_ACCESS_TOKEN }}
       run: |
         # 构建命令参数
         CMD="node ./script/remove-category-members.js --category=\"${{ github.event.inputs.category }}\" --sleep_time ${{ github.event.inputs.sleep_time }} --account_type ${{ github.event.inputs.account_type }}"
