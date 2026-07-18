@@ -42,8 +42,7 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 let content = pageData.revisions[0].content;
                 
                 // 检查机器人编辑权限
-                const botUsername = bot.config.username || 'Bot';
-                if (!allowBots(content, botUsername)) {
+                if (!allowBots(content)) {
                     console.log(pc.red(`[SKIP] 页面禁止机器人编辑，跳过: ${pageTitle}`));
                     stats.skipped++;
                     await sleep(sleepTime);
