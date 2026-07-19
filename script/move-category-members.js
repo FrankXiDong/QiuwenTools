@@ -51,7 +51,7 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 
                 // 检查是否已经包含目标分类（支持多种前缀）
                 const targetCatName = targetCategory.replace(/^Category:/i, '');
-                const targetCatPattern = new RegExp(`\\[\\[(?:Category|Cat|分[类類]):${escapeRegex(targetCatName)}(?:\\|[^[]*)?\\]\\]`, 'i');
+                const targetCatPattern = new RegExp(`\\[\\[(?:Category|Cat|分[类類]|類別):${escapeRegex(targetCatName)}(?:\\|[^[]*)?\\]\\]`, 'i');
                 if (targetCatPattern.test(content)) {
                     console.log(pc.yellow(`[SKIP] 页面已包含目标分类，跳过: ${pageTitle}`));
                     stats.skipped++;
@@ -61,8 +61,8 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 
                 // 直接替换源分类为目标分类（保留原有的排序键参数）
                 const sourceCatName = sourceCategory.replace(/^Category:/i, '');
-                // 匹配多种分类命名空间前缀：Category、Cat、分类、類別
-                const categoryPrefixPattern = '(?:Category|Cat|分[类類])';
+                // 匹配多种分类命名空间前缀：Category、Cat、分类、分類、類別
+                const categoryPrefixPattern = '(?:Category|Cat|分[类類]|類別)';
                 const sourceCatPattern = new RegExp(`\\[\\[${categoryPrefixPattern}:${escapeRegex(sourceCatName)}((?:\\|[^[]*)?)\\]\\]`, 'gi');
                 
                 // 使用替换函数，保留管道符和排序键参数
@@ -73,7 +73,7 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 } else {
                     // 如果页面中没有源分类标记，则在末尾添加目标分类
                     const targetCatLink = `[[${targetCategory}]]`;
-                    const lastCatMatch = content.match(/\[\[(?:Category|Cat|分[类類]):[^[]+\]\]/gi);
+                    const lastCatMatch = content.match(/\[\[(?:Category|Cat|分[类類]|類別):[^[]+\]\]/gi);
                     if (lastCatMatch && lastCatMatch.length > 0) {
                         // 如果已有分类，在最后一个分类后添加
                         const lastCatIndex = content.lastIndexOf(lastCatMatch[lastCatMatch.length - 1]);
@@ -114,6 +114,26 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
 }
 
 /**
+ * 将各种分类命名空间前缀统一转换为标准的 "Category:" 格式
+ * @param {string} categoryName - 原始分类名称
+ * @returns {string} 标准化后的分类名称
+ */
+function normalizeCategoryName(categoryName) {
+    // 匹配所有可能的分类命名空间前缀（大小写不敏感）
+    // 包括：Category, Cat, 分类, 分類, 類別
+    const prefixPattern = /^(?:category|cat|分[类類]|類別):/i;
+    
+    if (prefixPattern.test(categoryName)) {
+        // 提取分类名称部分（去掉前缀）
+        const catName = categoryName.replace(prefixPattern, '');
+        return 'Category:' + catName;
+    }
+    
+    // 如果没有前缀，直接添加 Category: 前缀
+    return 'Category:' + categoryName;
+}
+
+/**
  * 获取分类的所有成员（支持分页）
  * @param {Object} bot - Mwn bot实例
  * @param {string} categoryName - 分类名称
@@ -123,12 +143,15 @@ async function getAllCategoryMembers(bot, categoryName) {
     const allMembers = [];
     let continueParams = null;
     
+    // 标准化分类名称为标准格式 "Category:XXX"
+    const standardCategoryName = normalizeCategoryName(categoryName);
+    
     do {
         const params = {
             action: 'query',
             format: 'json',
             list: 'categorymembers',
-            cmtitle: categoryName,
+            cmtitle: standardCategoryName,
             cmlimit: 'max',
             cmtype: 'page|subcat' // 包括普通页面和子分类
         };
@@ -206,13 +229,9 @@ if (require.main === module) {
         process.exit(1);
     }
     
-    // 确保分类名称包含 "Category:" 前缀
-    if (!sourceCategory.startsWith('Category:') && !sourceCategory.startsWith('category:')) {
-        sourceCategory = 'Category:' + sourceCategory;
-    }
-    if (!targetCategory.startsWith('Category:') && !targetCategory.startsWith('category:')) {
-        targetCategory = 'Category:' + targetCategory;
-    }
+    // 标准化分类名称（支持 Category/Cat/分类/分類/類別 等多种前缀）
+    sourceCategory = normalizeCategoryName(sourceCategory);
+    targetCategory = normalizeCategoryName(targetCategory);
     
     console.log(pc.cyan('[INFO] 启动分类成员转移工具'));
     console.log(pc.cyan(`[INFO] 源分类: ${sourceCategory}`));
