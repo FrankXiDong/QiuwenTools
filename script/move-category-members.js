@@ -52,8 +52,12 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 // 检查是否已经包含目标分类（支持多种前缀）
                 const targetCatName = targetCategory.replace(/^Category:/i, '');
                 const targetCatPattern = new RegExp(`\\[\\[(?:Category|Cat|分[类類]|類別):${escapeRegex(targetCatName)}(?:\\|[^[]*)?\\]\\]`, 'i');
-                if (targetCatPattern.test(content)) {
-                    console.log(pc.yellow(`[SKIP] 页面已包含目标分类，跳过: ${pageTitle}`));
+                const alreadyHasTarget = targetCatPattern.test(content);
+
+                // 如果页面已包含目标分类且没有源分类，则跳过
+                const sourceCatName = sourceCategory.replace(/^Category:/i, '');
+                if (alreadyHasTarget && !content.includes(sourceCatName)) {
+                    console.log(pc.yellow(`[SKIP] 页面已包含目标分类且无源分类，跳过: ${pageTitle}`));
                     stats.skipped++;
                     await sleep(sleepTime);
                     continue;
@@ -68,8 +72,15 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 // 使用替换函数，保留管道符和排序键参数
                 const hasReplacement = content.includes(sourceCatName);
                 if (hasReplacement) {
-                    content = content.replace(sourceCatPattern, `[[${targetCategory}$1]]`);
-                    console.log(pc.blue(`[INFO] 已替换分类标记: ${pageTitle}`));
+                    if (alreadyHasTarget) {
+                        // 如果已有目标分类，只移除源分类标记
+                        content = content.replace(sourceCatPattern, '');
+                        console.log(pc.blue(`[INFO] 已移除源分类标记（页面已包含目标分类）: ${pageTitle}`));
+                    } else {
+                        // 如果没有目标分类，将源分类替换为目标分类
+                        content = content.replace(sourceCatPattern, `[[${targetCategory}$1]]`);
+                        console.log(pc.blue(`[INFO] 已替换分类标记: ${pageTitle}`));
+                    }
                 } else {
                     // 如果页面中没有源分类标记，则在末尾添加目标分类
                     const targetCatLink = `[[${targetCategory}]]`;
