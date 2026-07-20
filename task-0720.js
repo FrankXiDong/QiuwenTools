@@ -214,7 +214,7 @@ async function main() {
             try {
                 await bot.save(pageTitle, newContent, editSummary, {
                     minor: true,
-                    tags : "bot"
+                    tags : 'bot'
                 });
                 
                 console.log(pc.green(`${progress} [SUCCESS] 已成功替换`));
