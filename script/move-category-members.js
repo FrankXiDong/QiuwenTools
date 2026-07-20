@@ -62,9 +62,6 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                     await sleep(sleepTime);
                     continue;
                 }
-                
-                // 直接替换源分类为目标分类（保留原有的排序键参数）
-                const sourceCatName = sourceCategory.replace(/^Category:/i, '');
                 // 匹配多种分类命名空间前缀：Category、Cat、分类、分類、類別
                 const categoryPrefixPattern = '(?:Category|Cat|分[类類]|類別)';
                 const sourceCatPattern = new RegExp(`\\[\\[${categoryPrefixPattern}:${escapeRegex(sourceCatName)}((?:\\|[^[]*)?)\\]\\]`, 'gi');
