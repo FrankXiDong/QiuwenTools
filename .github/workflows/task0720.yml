@@ -3,10 +3,6 @@ name: Run task-0720.js
 on:
   workflow_dispatch: # 允许手动触发
     inputs:
-      category:
-        description: '要移出成员的分类名称（可带或不带 "Category:" 前缀）'
-        required: true
-        type: string
       sleep_time:
         description: '每次操作后的延时时间（毫秒）'
         required: false
@@ -62,7 +58,7 @@ jobs:
         USER_OAUTH2_ACCESS_TOKEN: ${{ secrets.USER_OAUTH2_ACCESS_TOKEN }}
       run: |
         # 构建命令参数
-        CMD="node task-0720.js --category=\"${{ github.event.inputs.category }}\" --sleep_time ${{ github.event.inputs.sleep_time }} --account_type ${{ github.event.inputs.account_type }}"
+        CMD="node task-0720.js --sleep_time ${{ github.event.inputs.sleep_time }} --account_type ${{ github.event.inputs.account_type }}"
         
         # 如果设置了limit，添加limit参数
         if [ -n "${{ github.event.inputs.limit }}" ]; then
