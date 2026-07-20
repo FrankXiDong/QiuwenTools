@@ -1,0 +1,75 @@
+name: Run task-0720.js
+
+on:
+  workflow_dispatch: # 允许手动触发
+    inputs:
+      category:
+        description: '要移出成员的分类名称（可带或不带 "Category:" 前缀）'
+        required: true
+        type: string
+      sleep_time:
+        description: '每次操作后的延时时间（毫秒）'
+        required: false
+        type: number
+        default: 2000
+      account_type:
+        description: '使用的账号类型'
+        required: false
+        type: choice
+        options:
+          - bot
+          - user
+        default: 'user'
+      limit:
+        description: '最多处理的页面数量（留空表示无限制）'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run Bot Script
+      env:
+        # 使用 GitHub Secrets 存储敏感信息
+        API_URL: ${{ secrets.API_URL }}
+        BOT_USER_AGENT : ${{ secrets.BOT_USER_AGENT }}
+        BOT_OAUTH2_CLIENT_ID: ${{ secrets.BOT_OAUTH2_CLIENT_ID }}
+        BOT_OAUTH2_CLIENT_SECRET : ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
+        BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
+        USER_USER_AGENT: ${{ secrets.USER_USER_AGENT }}
+        USER_OAUTH2_CLIENT_ID: ${{ secrets.USER_OAUTH2_CLIENT_ID }}
+        USER_OAUTH2_CLIENT_SECRET: ${{ secrets.USER_OAUTH2_CLIENT_SECRET }}
+        USER_OAUTH2_ACCESS_TOKEN: ${{ secrets.USER_OAUTH2_ACCESS_TOKEN }}
+      run: |
+        # 构建命令参数
+        CMD="node task-0720.js --category=\"${{ github.event.inputs.category }}\" --sleep_time ${{ github.event.inputs.sleep_time }} --account_type ${{ github.event.inputs.account_type }}"
+        
+        # 如果设置了limit，添加limit参数
+        if [ -n "${{ github.event.inputs.limit }}" ]; then
+          CMD="$CMD --limit=${{ github.event.inputs.limit }}"
+        fi
+        
+        # 执行命令
+        eval $CMD
+      
+      continue-on-error: false
