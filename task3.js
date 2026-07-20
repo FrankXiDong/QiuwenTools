@@ -127,7 +127,8 @@ async function main() {
     });
     
     // 生成 wikitext 格式的有序列表
-    let wikitext= '以下是最近30天内活跃用户的操作数（含编辑、导入、移动等操作）排名：\n\n';
+    let wikitext= '本页面为近30日的操作数（含编辑、导入、移动等操作）排名\n\
+    \n== 总榜（含机器人） ==\n';
     wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
     wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
     wikitext += '|-\n';
@@ -153,7 +154,7 @@ async function main() {
     wikitext += '|}';
 
     // 生成排除机器人的榜单
-    wikitext += '\n\n以下为排除机器人后的榜单：\n\n';
+    wikitext += '\n\n== 非机器人账号榜 ==\n';
     wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
     wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
     wikitext += '|-\n';
