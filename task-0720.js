@@ -212,10 +212,7 @@ async function main() {
             const editSummary = '添加{{红楼梦}}模板';
             
             try {
-                await bot.save(pageTitle, newContent, editSummary, {
-                    minor: true,
-                    tags : 'bot'
-                });
+                await bot.save(pageTitle, newContent, editSummary, { minor: true , tags: 'Bot'});
                 
                 console.log(pc.green(`${progress} [SUCCESS] 已成功替换`));
                 successCount++;
