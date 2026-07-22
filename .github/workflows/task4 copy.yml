@@ -1,0 +1,77 @@
+name: 批量移除Commons cat模板
+
+on:
+  workflow_dispatch: # 允许手动触发
+    inputs:
+      sleep_time:
+        description: '每次操作后的延时时间（毫秒）'
+        required: false
+        type: number
+        default: 5000
+      account_type:
+        description: '使用的账号类型'
+        required: false
+        type: choice
+        options:
+          - bot
+        default: 'bot'
+      limit:
+        description: '最多处理的页面数量（留空表示处理所有页面）'
+        required: false
+        type: number
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run Bot Script
+      env:
+        # 使用 GitHub Secrets 存储敏感信息
+        API_URL: ${{ secrets.API_URL }}
+        BOT_USER_AGENT: ${{ secrets.BOT_USER_AGENT }}
+        BOT_OAUTH2_CLIENT_ID: ${{ secrets.BOT_OAUTH2_CLIENT_ID }}
+        BOT_OAUTH2_CLIENT_SECRET: ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
+        BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
+        USER_USER_AGENT: ${{ secrets.USER_USER_AGENT }}
+        USER_OAUTH2_CLIENT_ID: ${{ secrets.USER_OAUTH2_CLIENT_ID }}
+        USER_OAUTH2_CLIENT_SECRET: ${{ secrets.USER_OAUTH2_CLIENT_SECRET }}
+        USER_OAUTH2_ACCESS_TOKEN: ${{ secrets.USER_OAUTH2_ACCESS_TOKEN }}
+      run: |
+        echo "=========================================="
+        echo "开始执行批量移除Commons cat模板任务"
+        echo "延时时间: ${{ github.event.inputs.sleep_time }}ms"
+        echo "账号类型: ${{ github.event.inputs.account_type }}"
+        if [ -n "${{ github.event.inputs.limit }}" ]; then
+          echo "处理限制: 最多 ${{ github.event.inputs.limit }} 个页面"
+          LIMIT_ARG="--limit=${{ github.event.inputs.limit }}"
+        else
+          echo "处理限制: 无限制（处理所有页面）"
+          LIMIT_ARG=""
+        fi
+        echo "=========================================="
+        
+        node task4-2.js \
+          --sleep_time ${{ github.event.inputs.sleep_time }} \
+          --account_type ${{ github.event.inputs.account_type }} \
+          --limit ${{ github.event.inputs.limit }} \
+          $LIMIT_ARG
+      
+      continue-on-error: false
