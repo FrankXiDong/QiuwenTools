@@ -85,17 +85,20 @@ function removeCommonscatTemplate(content) {
     let modified = false;
     let newContent = content;
     
-    // 匹配各种形式的Commons cat模板（不区分大小写）
-    // 支持: {{Commons cat|...}}, {{Commons cat|...}}, {{Commons cat|...}} 等
+    // 匹配各种形式的Commons cat模板
+    // 支持: {{Commons cat|...}}, {{commons cat|...}} 等
+    // 规则：首字母C/c可以大写或小写，其余字母必须是小写
     // 支持带参数的情况: {{Commons cat|url=xxx|date=xxx}}
     // 支持多行情况
     
     // 正则表达式说明：
     // \{\{           - 匹配 {{
-    // [Ww][Aa][Yy][Bb][Aa][Cc][Kk] - 匹配 Commons cat（不区分大小写）
+    // [Cc]ommons     - 匹配 Commons 或 commons（首字母大小写均可，其余小写）
+    // \s+            - 匹配一个或多个空白字符
+    // [Cc]at         - 匹配 Cat 或 cat（首字母大小写均可，其余小写）
     // [^}]*          - 匹配任意非}字符（包括参数）
     // \}\}           - 匹配 }}
-    const CommonscatPattern = /\{\{[Ww][Aa][Yy][Bb][Aa][Cc][Kk][^}]*\}\}/g;
+    const CommonscatPattern = /\{\{[Cc]ommons\s+[Cc]at[^}]*\}\}/g;
     
     // 多次执行以确保移除所有匹配项
     let previousContent;
