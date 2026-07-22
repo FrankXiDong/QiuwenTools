@@ -19,6 +19,8 @@ on:
         description: '最多处理的页面数量（留空表示处理所有页面）'
         required: false
         type: number
+  schedule:
+    - cron: '0 10,15,20 * * *'
 
 jobs:
   run-bot:

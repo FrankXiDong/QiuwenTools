@@ -30,9 +30,9 @@ function parseArgs() {
     }
     
     // 解析可选参数
-    let sleepTime = 5000; // 默认5秒延时
+    let sleepTime = 3000; // 默认3秒延时
     let accountType = 'bot'; // 默认使用bot账号
-    let limit = null; // 默认无限制
+    let limit = 400; // 默认400个爷们
     
     const sleepTimeIndex = args.indexOf('--sleep_time');
     if (sleepTimeIndex !== -1 && sleepTimeIndex + 1 < args.length) {
@@ -40,7 +40,7 @@ function parseArgs() {
         if (!isNaN(parsed) && parsed > 0) {
             sleepTime = parsed;
         } else {
-            console.warn(pc.yellow('[WARN] 无效的 --sleep_time 参数，使用默认值 5000ms'));
+            console.warn(pc.yellow('[WARN] 无效的 --sleep_time 参数，使用默认值 3000ms'));
         }
     }
     
@@ -60,7 +60,7 @@ function parseArgs() {
         if (!isNaN(parsed) && parsed > 0) {
             limit = parsed;
         } else {
-            console.warn(pc.yellow('[WARN] 无效的 --limit 参数，将处理所有页面'));
+            console.warn(pc.yellow('[WARN] 无效的 --limit 参数，默认处理400个页面'));
         }
     }
     
@@ -94,13 +94,15 @@ function removeCommonscatTemplate(content) {
     // 支持多行情况
     
     // 正则表达式说明：
-    // \{\{           - 匹配 {{
-    // [Cc]ommons     - 匹配 Commons 或 commons（首字母大小写均可，其余小写）
-    // \s*            - 匹配零个或多个空白字符（兼容带空格和不带空格的格式）
-    // [Cc]at         - 匹配 Cat 或 cat（首字母大小写均可，其余小写）
-    // [^}]*          - 匹配任意非}字符（包括参数）
-    // \}\}           - 匹配 }}
-    const CommonscatPattern = /\{\{[Cc]ommons\s*[Cc]at[^}]*\}\}/g;
+    // ^\s*       - 匹配行首的空白字符（包括换行符后的空格）
+    // \{\{       - 匹配 {{
+    // [Cc]ommons - 匹配 Commons 或 commons（首字母大小写均可，其余小写）
+    // \s*        - 匹配零个或多个空白字符（兼容带空格和不带空格的格式）
+    // [Cc]at     - 匹配 Cat 或 cat（首字母大小写均可，其余小写）
+    // [^}]*      - 匹配任意非}字符（包括参数）
+    // \}\}       - 匹配 }}
+    // \s*$       - 匹配行尾的空白字符和换行符
+    const CommonscatPattern = /^\s*\{\{[Cc]ommons\s*[Cc]at[^}]*\}\}\s*$/gm;
     
     // 多次执行以确保移除所有匹配项
     let previousContent;
@@ -113,8 +115,8 @@ function removeCommonscatTemplate(content) {
     } while (newContent !== previousContent);
     
     // 清理可能留下的多余空行和空白
-    // 将多个连续空行替换为最多两个换行
-    newContent = newContent.replace(/\n\s*\n\s*\n/g, '\n\n');
+    // 将多个连续空行替换为最多一个空行（即两个换行符）
+    newContent = newContent.replace(/\n\s*\n\s*\n+/g, '\n\n');
     // 清理行首行尾空白
     newContent = newContent.trim();
     
