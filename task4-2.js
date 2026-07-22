@@ -229,11 +229,12 @@ async function main() {
             if (!removed) {
                 console.log(pc.yellow(`${progress} [SKIP] 未检测到Commons cat模板，跳过`));
                 skipCount++;
+                await sleep(sleepTime);
                 return;
             }
             
             // 保存修改后的内容
-            const editSummary = '机器人：批量移除已弃用的{{Commons cat}}模板（task4-2）';
+            const editSummary = '机器人：批量移除已弃用的{{Commonscat}}（{{Commons cat}}）模板（task4-2）';
             
             await bot.save(pageTitle, newContent, editSummary, {
                 minor: true,
