@@ -85,8 +85,10 @@ function removeCommonscatTemplate(content) {
     let modified = false;
     let newContent = content;
     
-    // 匹配各种形式的Commons cat模板
-    // 支持: {{Commons cat|...}}, {{commons cat|...}} 等
+    // 匹配各种形式的Commons cat模板（包括带空格和不带空格的重定向版本）
+    // 支持格式：
+    // - {{Commons cat|...}} / {{commons cat|...}} （标准格式，带空格）
+    // - {{Commonscat|...}} / {{commonscat|...}} （重定向格式，无空格）
     // 规则：首字母C/c可以大写或小写，其余字母必须是小写
     // 支持带参数的情况: {{Commons cat|url=xxx|date=xxx}}
     // 支持多行情况
@@ -94,11 +96,11 @@ function removeCommonscatTemplate(content) {
     // 正则表达式说明：
     // \{\{           - 匹配 {{
     // [Cc]ommons     - 匹配 Commons 或 commons（首字母大小写均可，其余小写）
-    // \s+            - 匹配一个或多个空白字符
+    // \s*            - 匹配零个或多个空白字符（兼容带空格和不带空格的格式）
     // [Cc]at         - 匹配 Cat 或 cat（首字母大小写均可，其余小写）
     // [^}]*          - 匹配任意非}字符（包括参数）
     // \}\}           - 匹配 }}
-    const CommonscatPattern = /\{\{[Cc]ommons\s+[Cc]at[^}]*\}\}/g;
+    const CommonscatPattern = /\{\{[Cc]ommons\s*[Cc]at[^}]*\}\}/g;
     
     // 多次执行以确保移除所有匹配项
     let previousContent;
@@ -139,103 +141,84 @@ async function main() {
     console.log(pc.blue(`[INFO] 初始化 ${accountType.toUpperCase()} 账号...`));
     const bot = await createBot(accountType);
 
-    // 2. 查询Commons cat模板的链入页面
+    // 2. 查询Commons cat模板的链入页面（包括标准版本和重定向版本）
     console.log(pc.cyan('[INFO] 正在查询Commons cat模板的链入页面...'));
     
+    const templatesToCheck = ['Template:Commons cat', 'Template:Commonscat'];
     let allPages = [];
-    let continueParam = null;
     
-    do {
-        const params = {
-            action: 'query',
-            list: 'embeddedin',
-            eititle: 'Template:Commons cat',
-            eilimit: 'max',
-            format: 'json',
-            formatversion: '2'
-        };
-        
-        if (continueParam) {
-            params.eicontinue = continueParam;
-        }
+    // 使用 mwn 的 continuedQuery 方法自动处理分页
+    for (const templateTitle of templatesToCheck) {
+        console.log(pc.blue(`[INFO] 查询模板: ${templateTitle}`));
         
         try {
-            const result = await bot.request(params);
+            const responses = await bot.continuedQuery({
+                action: 'query',
+                list: 'embeddedin',
+                eititle: templateTitle,
+                eilimit: 'max',
+                formatversion: '2'
+            });
             
-            if (result.query && result.query.embeddedin) {
-                const pages = result.query.embeddedin.map(item => item.title);
-                allPages = allPages.concat(pages);
-                console.log(pc.green(`[INFO] 已获取 ${pages.length} 个页面（累计: ${allPages.length}）`));
-            }
+            // 合并所有响应的结果
+            responses.forEach(response => {
+                if (response.query && response.query.embeddedin) {
+                    const pages = response.query.embeddedin.map(item => item.title);
+                    allPages = allPages.concat(pages);
+                }
+            });
             
-            // 检查是否有更多结果
-            if (result.continue && result.continue.eicontinue) {
-                continueParam = result.continue.eicontinue;
-            } else {
-                continueParam = null;
-            }
+            console.log(pc.green(`[INFO] 从 ${templateTitle} 获取 ${allPages.length} 个页面`));
             
             // 延时避免API速率限制
             await sleep(sleepTime);
             
         } catch (error) {
-            console.error(pc.red('[ERROR] 查询链入页面失败:'), error.message);
-            await logError(bot, `查询Commons cat模板链入页面失败`, {
+            console.error(pc.red(`[ERROR] 查询 ${templateTitle} 链入页面失败:`), error.message);
+            await logError(bot, `查询${templateTitle}模板链入页面失败`, {
                 error: error.message,
                 stack: error.stack
             });
-            break;
         }
-    } while (continueParam);
+    }
     
-    console.log(pc.green(`[COMPLETE] 共找到 ${allPages.length} 个包含Commons cat模板的页面`));
+    // 去重：使用 Set 去除重复的页面
+    const uniquePages = [...new Set(allPages)];
+    console.log(pc.green(`[COMPLETE] 共找到 ${uniquePages.length} 个包含Commons cat模板的页面（去重前: ${allPages.length}）`));
     
-    if (allPages.length === 0) {
+    if (uniquePages.length === 0) {
         console.log(pc.yellow('[INFO] 没有找到包含Commons cat模板的页面，任务结束'));
         return;
     }
     
     // 如果设置了limit，截取前n个页面
-    let pagesToProcess = allPages;
-    if (limit && limit < allPages.length) {
-        pagesToProcess = allPages.slice(0, limit);
-        console.log(pc.yellow(`[INFO] 根据 --limit 参数，将只处理前 ${limit} 个页面（总共 ${allPages.length} 个）`));
+    let pagesToProcess = uniquePages;
+    if (limit && limit < uniquePages.length) {
+        pagesToProcess = uniquePages.slice(0, limit);
+        console.log(pc.yellow(`[INFO] 根据 --limit 参数，将只处理前 ${limit} 个页面（总共 ${uniquePages.length} 个）`));
     }
     
-    // 3. 逐个页面处理，移除Commons cat模板
-    console.log(pc.cyan(`[INFO] 开始逐个页面移除Commons cat模板（共 ${pagesToProcess.length} 个页面）...`));
+    // 3. 使用 batchOperation 批量处理页面
+    console.log(pc.cyan(`[INFO] 开始批量移除Commons cat模板（共 ${pagesToProcess.length} 个页面）...`));
     
     let successCount = 0;
     let skipCount = 0;
     let failCount = 0;
     
-    for (let i = 0; i < pagesToProcess.length; i++) {
-        const pageTitle = pagesToProcess[i];
-        const progress = `[${i + 1}/${pagesToProcess.length}]`;
+    // 定义工作函数
+    const processPage = async (pageTitle, index) => {
+        const progress = `[${index + 1}/${pagesToProcess.length}]`;
         
         try {
             console.log(pc.blue(`${progress} 处理页面: ${pageTitle}`));
             
             // 读取页面内容
-            let pageData;
-            try {
-                pageData = await bot.read(pageTitle);
-            } catch (readError) {
-                console.error(pc.red(`${progress} [ERROR] 读取页面失败:`), readError.message);
-                await logError(bot, `读取页面失败: ${pageTitle}`, {
-                    error: readError.message,
-                    stack: readError.stack
-                });
-                failCount++;
-                await sleep(sleepTime);
-                continue;
-            }
+            const pageData = await bot.read(pageTitle);
             
             if (!pageData || !pageData.revisions || !pageData.revisions[0]) {
                 console.log(pc.yellow(`${progress} [SKIP] 无法获取页面内容，跳过`));
                 skipCount++;
-                await sleep(sleepTime);
-                continue;
+                return;
             }
             
             const originalContent = pageData.revisions[0].content;
@@ -246,35 +229,23 @@ async function main() {
             if (!removed) {
                 console.log(pc.yellow(`${progress} [SKIP] 未检测到Commons cat模板，跳过`));
                 skipCount++;
-                await sleep(sleepTime);
-                continue;
+                return;
             }
             
             // 保存修改后的内容
             const editSummary = '机器人：批量移除已弃用的{{Commons cat}}模板（task4-2）';
             
-            try {
-                await bot.save(pageTitle, newContent, editSummary, {
-                    minor: true,
-                    bot: accountType === 'bot'
-                });
-                
-                console.log(pc.green(`${progress} [SUCCESS] 已成功移除Commons cat模板`));
-                successCount++;
-                
-            } catch (saveError) {
-                console.error(pc.red(`${progress} [ERROR] 保存页面失败:`), saveError.message);
-                await logError(bot, `保存页面失败: ${pageTitle}`, {
-                    error: saveError.message,
-                    stack: saveError.stack,
-                    originalContent: originalContent.substring(0, 200)
-                });
-                failCount++;
-            }
+            await bot.save(pageTitle, newContent, editSummary, {
+                minor: true,
+                bot: accountType === 'bot'
+            });
+            
+            console.log(pc.green(`${progress} [SUCCESS] 已成功移除Commons cat模板`));
+            successCount++;
             
         } catch (error) {
-            console.error(pc.red(`${progress} [ERROR] 处理页面时发生未知错误:`), error.message);
-            await logError(bot, `处理页面时发生未知错误: ${pageTitle}`, {
+            console.error(pc.red(`${progress} [ERROR] 处理页面失败:`), error.message);
+            await logError(bot, `处理页面失败: ${pageTitle}`, {
                 error: error.message,
                 stack: error.stack
             });
@@ -283,14 +254,25 @@ async function main() {
         
         // 延时避免API速率限制
         await sleep(sleepTime);
-    }
+    };
     
-    // 4. 输出统计信息
+    // 使用 seriesBatchOperation 顺序处理（concurrency=1），确保延时生效
+    const result = await bot.seriesBatchOperation(
+        pagesToProcess,
+        processPage,
+        0, // delay 设为 0，因为我们在工作函数内部手动控制延时
+        0  // 不重试
+    );
+    
+    // 输出统计信息
     console.log(pc.cyan('\n========== 任务完成统计 =========='));
     console.log(pc.green(`成功移除: ${successCount} 个页面`));
     console.log(pc.yellow(`跳过: ${skipCount} 个页面`));
     console.log(pc.red(`失败: ${failCount} 个页面`));
-    console.log(pc.cyan(`总计: ${allPages.length} 个页面`));
+    console.log(pc.cyan(`总计: ${pagesToProcess.length} 个页面`));
+    if (result.failures && Object.keys(result.failures).length > 0) {
+        console.log(pc.red(`batchOperation 报告的失败数: ${Object.keys(result.failures).length}`));
+    }
     console.log(pc.cyan('====================================\n'));
 }
 
