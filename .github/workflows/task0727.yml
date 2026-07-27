@@ -1,0 +1,41 @@
+name: Run task-0727.js
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run Bot Script
+      env:
+        # 使用 GitHub Secrets 存储敏感信息
+        API_URL: ${{ secrets.API_URL }}
+        BOT_USER_AGENT : ${{ secrets.BOT_USER_AGENT }}
+        BOT_OAUTH2_CLIENT_ID: ${{ secrets.BOT_OAUTH2_CLIENT_ID }}
+        BOT_OAUTH2_CLIENT_SECRET : ${{ secrets.BOT_OAUTH2_CLIENT_SECRET }}
+        BOT_OAUTH2_ACCESS_TOKEN: ${{ secrets.BOT_OAUTH2_ACCESS_TOKEN }}
+        USER_USER_AGENT: ${{ secrets.USER_USER_AGENT }}
+        USER_OAUTH2_CLIENT_ID: ${{ secrets.USER_OAUTH2_CLIENT_ID }}
+        USER_OAUTH2_CLIENT_SECRET: ${{ secrets.USER_OAUTH2_CLIENT_SECRET }}
+        USER_OAUTH2_ACCESS_TOKEN: ${{ secrets.USER_OAUTH2_ACCESS_TOKEN }}
+      run: 
+        node task-0727.js
