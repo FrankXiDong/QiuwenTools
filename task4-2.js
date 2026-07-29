@@ -1,4 +1,4 @@
-/* [机器人任务4] 批量移除所有Commons cat模板 */
+/* [机器人任务4] 批量移除所有Commons_Category模板 */
 
 const { createBot } = require('./auth');
 const { logError } = require('./script/log');
@@ -76,7 +76,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 从页面内容中移除Commons cat模板
+// 从页面内容中移除Commons_Category模板
 function removeCommonscatTemplate(content) {
     if (!content || typeof content !== 'string') {
         return { content, removed: false };
@@ -85,12 +85,12 @@ function removeCommonscatTemplate(content) {
     let modified = false;
     let newContent = content;
     
-    // 匹配各种形式的Commons cat模板（包括带空格和不带空格的重定向版本）
+    // 匹配各种形式的Commons_Category模板（包括带空格和不带空格的重定向版本）
     // 支持格式：
-    // - {{Commons cat|...}} / {{commons cat|...}} （标准格式，带空格）
+    // - {{Commons_Category|...}} / {{Commons_Category|...}} （标准格式，带空格）
     // - {{Commonscat|...}} / {{commonscat|...}} （重定向格式，无空格）
     // 规则：首字母C/c可以大写或小写，其余字母必须是小写
-    // 支持带参数的情况: {{Commons cat|url=xxx|date=xxx}}
+    // 支持带参数的情况: {{Commons_Category|url=xxx|date=xxx}}
     // 支持多行情况
     
     // 正则表达式说明：
@@ -143,10 +143,10 @@ async function main() {
     console.log(pc.blue(`[INFO] 初始化 ${accountType.toUpperCase()} 账号...`));
     const bot = await createBot(accountType);
 
-    // 2. 查询Commons cat模板的链入页面（包括标准版本和重定向版本）
-    console.log(pc.cyan('[INFO] 正在查询Commons cat模板的链入页面...'));
+    // 2. 查询Commons_Category模板的链入页面（包括标准版本和重定向版本）
+    console.log(pc.cyan('[INFO] 正在查询Commons_Category模板的链入页面...'));
     
-    const templatesToCheck = ['Template:Commons cat', 'Template:Commonscat'];
+    const templatesToCheck = ['Template:Commons_Category', 'Template:Commonscat'];
     let allPages = [];
     
     // 使用 mwn 的 continuedQuery 方法自动处理分页
@@ -186,10 +186,10 @@ async function main() {
     
     // 去重：使用 Set 去除重复的页面
     const uniquePages = [...new Set(allPages)];
-    console.log(pc.green(`[COMPLETE] 共找到 ${uniquePages.length} 个包含Commons cat模板的页面（去重前: ${allPages.length}）`));
+    console.log(pc.green(`[COMPLETE] 共找到 ${uniquePages.length} 个包含Commons_Category模板的页面（去重前: ${allPages.length}）`));
     
     if (uniquePages.length === 0) {
-        console.log(pc.yellow('[INFO] 没有找到包含Commons cat模板的页面，任务结束'));
+        console.log(pc.yellow('[INFO] 没有找到包含Commons_Category模板的页面，任务结束'));
         return;
     }
     
@@ -201,7 +201,7 @@ async function main() {
     }
     
     // 3. 使用 batchOperation 批量处理页面
-    console.log(pc.cyan(`[INFO] 开始批量移除Commons cat模板（共 ${pagesToProcess.length} 个页面）...`));
+    console.log(pc.cyan(`[INFO] 开始批量移除Commons_Category模板（共 ${pagesToProcess.length} 个页面）...`));
     
     let successCount = 0;
     let skipCount = 0;
@@ -225,25 +225,25 @@ async function main() {
             
             const originalContent = pageData.revisions[0].content;
             
-            // 移除Commons cat模板
+            // 移除Commons_Category模板
             const { content: newContent, removed } = removeCommonscatTemplate(originalContent);
             
             if (!removed) {
-                console.log(pc.yellow(`${progress} [SKIP] 未检测到Commons cat模板，跳过`));
+                console.log(pc.yellow(`${progress} [SKIP] 未检测到Commons_Category模板，跳过`));
                 skipCount++;
                 await sleep(sleepTime);
                 return;
             }
             
             // 保存修改后的内容
-            const editSummary = '机器人：批量移除已弃用的{{Commonscat}}（{{Commons cat}}）模板（task4-2）';
+            const editSummary = '机器人：批量移除已弃用的{{Commonscat}}（{{Commons_Category}}）模板（task4-2）';
             
             await bot.save(pageTitle, newContent, editSummary, {
                 minor: true,
                 bot: accountType === 'bot'
             });
             
-            console.log(pc.green(`${progress} [SUCCESS] 已成功移除Commons cat模板`));
+            console.log(pc.green(`${progress} [SUCCESS] 已成功移除Commons_Category模板`));
             successCount++;
             
         } catch (error) {
