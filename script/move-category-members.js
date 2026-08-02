@@ -4,6 +4,7 @@ const pc = require('picocolors');
 const { sleep } = require('./catnav-handler');
 const { createBot } = require('../auth');
 const { allowBots } = require('./check-bot-permission');
+const { logError } = require('./log');
 
 /**
  * 将源分类中的所有成员转移到目标分类
@@ -154,31 +155,36 @@ async function getAllCategoryMembers(bot, categoryName) {
     // 标准化分类名称为标准格式 "Category:XXX"
     const standardCategoryName = normalizeCategoryName(categoryName);
     
-    do {
-        const params = {
+    try {
+        const responses = await bot.continuedQuery({
             action: 'query',
             format: 'json',
             list: 'categorymembers',
             cmtitle: standardCategoryName,
             cmlimit: 'max',
-            cmtype: 'page|subcat' // 包括普通页面和子分类
-        };
+            formatversion: '2'
+        });
         
-        if (continueParams) {
-            Object.assign(params, continueParams);
+        // 合并所有响应的结果
+        responses.forEach(response => {
+            if (response.query && response.query.categorymembers) {
+                allMembers.push(...response.query.categorymembers);
+            }
+        });
+        
+        console.log(pc.green(`[INFO] 从 ${standardCategoryName} 获取 ${allMembers.length} 个成员`));
+        
+        // 延时避免API速率限制
+        await sleep(1000);
+            
+        } catch (error) {
+            console.error(pc.red(`[ERROR] 查询 ${standardCategoryName} 成员失败:`), error.message);
+            await logError(bot, `查询${standardCategoryName}分类成员失败`, {
+                error: error.message,
+                stack: error.stack
+            });
         }
-        
-        const result = await bot.request(params);
-        
-        if (result.query && result.query.categorymembers) {
-            allMembers.push(...result.query.categorymembers);
-        }
-        
-        // 检查是否有更多结果
-        continueParams = result.continue || null;
-        
-    } while (continueParams);
-    
+
     return allMembers;
 }
 
@@ -290,15 +296,15 @@ function printUsage() {
 
 示例:
   # 基本用法
-  node move-category-members.js --source="Category:旧分类" --target="Category:新分类"
+  node ./script/move-category-members.js --source="Category:旧分类" --target="Category:新分类"
   
   # 不带前缀的分类名
-  node move-category-members.js --source="旧分类" --target="新分类"
+  node ./script/move-category-members.js --source="旧分类" --target="新分类"
   
   # 自定义延时时间（3秒）
-  node move-category-members.js --source="旧分类" --target="新分类" --sleep=3000
+  node ./script/move-category-members.js --source="旧分类" --target="新分类" --sleep=3000
   
   # 使用 user 账号
-  node move-category-members.js --source="旧分类" --target="新分类" --account=user
+  node ./script/move-category-members.js --source="旧分类" --target="新分类" --account=user
 `);
 }
