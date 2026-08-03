@@ -71,7 +71,8 @@ async function moveCategoryMembers(bot, sourceCategory, targetCategory, sleepTim
                 const hasReplacement = content.includes(sourceCatName);
                 if (hasReplacement) {
                     if (alreadyHasTarget) {
-                        // 如果已有目标分类，只移除源分类标记
+                        // 如果已有目标分类，只移除源分类标记，并且避免留下空行
+                        content = content.replace('\n'+sourceCatPattern+'\n', '\n');
                         content = content.replace(sourceCatPattern, '');
                         console.log(pc.blue(`[INFO] 已移除源分类标记（页面已包含目标分类）: ${pageTitle}`));
                     } else {
