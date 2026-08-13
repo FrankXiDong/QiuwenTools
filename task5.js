@@ -1,4 +1,4 @@
-/* 0803临时任务*/
+/* 任务5：自动清理迁移文件的分类 */
 
 const { createBot } = require('./auth');
 const { logError } = require('./script/log');
@@ -32,11 +32,17 @@ async function main() {
 
     // 只保留以“Photographs by”“Files by”“Images by”“Images translated by”开头的分类
     pagelist = pagelist.filter(title => 
-        title.startsWith("Category:Photographs by") ||
+        title.startsWith("Category:People sitting") || // 描述图片内容
+        title.startsWith("Category:Photographs by") || // 图片来源、作者或制作设备，下同
         title.startsWith("Category:Files by") ||
         title.startsWith("Category:Images by") ||
         title.startsWith("Category:Images translated by") ||
-        title.startsWith("Category:People sitting")
+        title.startsWith("Category:Taken with") ||
+        title.startsWith("Category:Pictures from") ||
+        title.startsWith("Category:Photos by") ||
+        title.startsWith("Category:Photographs with") ||
+        title.startsWith("Category:Featured pictures") || // 特色图片
+        title.startsWith("Category:Valued images") 
     );
 
     console.log(pc.blue(`[INFO] 获取到待处理分类列表，共 ${pagelist.length} 个分类，为：${pagelist.join(', ')}`));
@@ -44,7 +50,7 @@ async function main() {
 
     for (const categoryname of pagelist) {
         const wikitext = `{{分类重定向|迁移文件}}`
-        await bot.save(title=categoryname, content=wikitext, summary='机器人：批量清理以“Photographs by”开头的分类', tags='Bot');
+        await bot.save(title=categoryname, content=wikitext, summary='机器人：自动创建分类重定向至[[:Category:迁移文件]]', tags='Bot');
         console.log(pc.blue(`[INFO] 完成创建：${categoryname}`));
         await sleep(2500);
     }
