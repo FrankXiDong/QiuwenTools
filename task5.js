@@ -42,7 +42,8 @@ async function main() {
         title.startsWith("Category:Photos by") ||
         title.startsWith("Category:Photographs with") ||
         title.startsWith("Category:Featured pictures") || // 特色图片
-        title.startsWith("Category:Valued images") 
+        title.startsWith("Category:Valued images") || 
+        title.startsWith("Category:Media needing categorization by")
     );
 
     console.log(pc.blue(`[INFO] 获取到待处理分类列表，共 ${pagelist.length} 个分类，为：${pagelist.join(', ')}`));
