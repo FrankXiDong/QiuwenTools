@@ -43,7 +43,7 @@ async function handleCatnavTemplate(bot, categoryName, sleepTime = 3000) {
                 if (isOnlyCaseChange) {
                     console.log(pc.yellow(`[SKIP] 分类页面{{Catnav}}模板仅大小写不同，跳过编辑：${categoryName}`));
                 } else {
-                    editSummary = '统一{{Catnav}}模板参数';
+                    editSummary = '机器人：修正{{Catnav}}模板';
                     await bot.save(categoryName, updatedContent, editSummary, { minor: true });
                     console.log(pc.green(`[SUCCESS] 已更新分类页面的{{Catnav}}模板：${categoryName}`));
                     hasChanges = true;
@@ -54,7 +54,7 @@ async function handleCatnavTemplate(bot, categoryName, sleepTime = 3000) {
         } else {
             // 如果不存在Catnav模板，在页首添加
             updatedContent = '{{Catnav|auto=1}}\n' + content;
-            editSummary = '添加{{Catnav}}模板';
+            editSummary = '机器人：添加{{Catnav}}模板';
             await bot.save(categoryName, updatedContent, editSummary, { minor: true });
             console.log(pc.green(`[SUCCESS] 已在分类页面页首添加{{Catnav}}模板：${categoryName}`));
             hasChanges = true;
