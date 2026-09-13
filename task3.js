@@ -131,7 +131,9 @@ async function main() {
 本页面为求闻编者近30日的操作数（含编辑、导入、移动等操作）排名。
 
 如修改本页面样式，请通知机器人操作者，否则可能会被机器人用旧版本覆盖。
-    == 总榜（含机器人） ==`;
+
+== 总榜（含机器人） ==
+`;
     wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
     wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
     wikitext += '|-\n';
