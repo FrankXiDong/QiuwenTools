@@ -127,8 +127,11 @@ async function main() {
     });
     
     // 生成 wikitext 格式的有序列表
-    let wikitext= '本页面为近30日的操作数（含编辑、导入、移动等操作）排名\n\
-    \n== 总榜（含机器人） ==\n';
+    let wikitext= `{{信息页|共识=0}}
+本页面为求闻编者近30日的操作数（含编辑、导入、移动等操作）排名。
+
+如修改本页面样式，请通知机器人操作者，否则可能会被机器人用旧版本覆盖。
+    == 总榜（含机器人） ==`;
     wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
     wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
     wikitext += '|-\n';
