@@ -43,7 +43,8 @@ async function main() {
         title.startsWith("Category:Photographs with") ||
         title.startsWith("Category:Featured pictures") || // 特色图片
         title.startsWith("Category:Valued images") || 
-        title.startsWith("Category:Media needing categorization by")
+        title.startsWith("Category:Media needing categorization by") ||
+        title.includes("by User:") // 所有包括用户
     );
 
     console.log(pc.blue(`[INFO] 获取到待处理分类列表，共 ${pagelist.length} 个分类，为：${pagelist.join(', ')}`));
