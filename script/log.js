@@ -64,8 +64,8 @@ async function logError(bot, errorMessage, errorDetails = null) {
                 actualLogPage = `User:${username}/errorlog`;
                 console.log(pc.cyan(`[INFO] 推断日志页面路径: ${actualLogPage}`));
             } catch (userError) {
-                actualLogPage = 'User:Bot/errorlog'; // 最后的备选
-                console.log(pc.yellow(`[WARN] 无法获取用户名，使用默认路径: ${actualLogPage}`));
+                console.log(pc.yellow(`[WARN] 无法获取用户名`));
+                return false;
             }
         }
         
