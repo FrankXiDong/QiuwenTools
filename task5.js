@@ -44,7 +44,7 @@ async function main() {
         title.startsWith("Category:Featured pictures") || // 特色图片
         title.startsWith("Category:Valued images") || 
         title.startsWith("Category:Media needing categorization by") ||
-        title.startsWith("Category:Quality images") ||
+        title.startsWith("Category:Quality") ||
         title.includes("by User:") // 所有包括用户
     );
 
