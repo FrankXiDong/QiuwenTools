@@ -34,7 +34,7 @@ async function logdata(bot, logcontent) {
             const pageId = Object.keys(pages)[0];
             if (pageId !== '-1' && pages[pageId].title) {
                 actualLogPage = pages[pageId].title;
-                console.log(pc.cyan(`[INFO] 日志页面实际路径: ${actualLogPage}`));
+                // console.log(pc.cyan(`[INFO] 日志页面实际路径: ${actualLogPage}`));
             }
         } catch (resolveError) {
             // 如果无法解析，使用默认格式
@@ -129,7 +129,7 @@ async function main() {
         await bot.save(title=categoryname, content=wikitext, summary='机器人：自动创建分类重定向至[[:Category:迁移文件]]', tags='Bot');
         console.log(pc.blue(`[INFO] 完成创建：${categoryname}`));
         await sleep(1500);
-        await logdata(bot, `创建[[:Category:${categoryname}]]`);
+        await logdata(bot, `创建[[:${categoryname}]]`);
         await sleep(1500);
     }
     console.log(pc.green(`[INFO] 批量创建完成`));
