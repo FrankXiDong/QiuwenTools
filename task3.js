@@ -192,7 +192,7 @@ async function main() {
 
     // 生成管理员（含裁决委员、监督员）榜单
     wikitext += '\n\n== 管理人员榜 ==\n';
-    wikitext += '注：近30日无操作记录者不计入。';
+    wikitext += '注：近30日无操作记录者不计入。\n';
     wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
     wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
     wikitext += '|-\n';
