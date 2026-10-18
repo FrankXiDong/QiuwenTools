@@ -192,9 +192,9 @@ async function main() {
 
     // 生成管理员（含裁决委员、监督员）榜单
     wikitext += '\n\n== 管理人员榜 ==\n';
-    wikitext += '注：近30日无操作记录者不计入。\n';
+    wikitext += '注：近30日无操作记录者不计入。管理操作数统计近30日的删除、保护、合并、封禁、用户权限、滥用过滤器、标签管理、用户重命名等操作。无法获取监督操作和被监督的操作。\n';
     wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
-    wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
+    wikitext += '! 排名 !! 用户名 !! 近30日操作数 !! 近30日管理操作数\n';
     wikitext += '|-\n';
 
     function isAdmin(groups) {
@@ -205,16 +205,84 @@ async function main() {
             || normalizedGroups.includes('suppress');
     }
 
+    // 函数：获取管理人员的管理操作（删除、保护、合并、封禁、用户权限等）数量
+    async function getAdminActionsCount(usernames) {
+        const adminActions = ['delete', 'protect', 'merge', 'block', 'rights', 'abusefilter', 'managetags', 'renameuser'];
+        const counts = Object.fromEntries(usernames.map(username => [username, 0]));
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+        for (let adminAction of adminActions) {
+            let continueParams = null;
+            let previousContinue = null;
+
+            do {
+                const params = {
+                    action: 'query',
+                    format: 'json',
+                    list: 'logevents',
+                    lelimit: 'max',
+                    letype: adminAction,
+                    leend: cutoff.toISOString(),
+                    leprop: 'ids|title|type|user|timestamp',
+                    formatversion: '2'
+                };
+
+                if (continueParams) {
+                    Object.assign(params, continueParams);
+                }
+
+                const result = await bot.request(params);
+                let filteredEvents = [];
+
+                if (result.query && result.query.logevents) {
+                    const events = result.query.logevents;
+                    // 只保留近30日的数据
+                    filteredEvents = events.filter(event => {
+                        const timestamp = new Date(event.timestamp);
+                        return timestamp >= cutoff;
+                    });
+
+                    for (const event of filteredEvents) {
+                        if (usernames.includes(event.user) && typeof counts[event.user] === 'number') {
+                            counts[event.user] += 1;
+                        }
+                    }
+                }
+
+                console.log(pc.cyan(`[INFO] 获取操作“${adminAction}”的日志成功，已处理 ${filteredEvents.length} 条日志`));
+
+                const nextContinue = result.continue || null;
+                if (!nextContinue) {
+                    break;
+                }
+
+                if (previousContinue && JSON.stringify(previousContinue) === JSON.stringify(nextContinue)) {
+                    console.warn(pc.yellow(`[WARN] 操作“${adminAction}”的分页 token 未变化，停止继续请求，避免死循环`));
+                    break;
+                }
+
+                previousContinue = nextContinue;
+                continueParams = nextContinue;
+                await sleep(1800);
+
+            } while (continueParams);
+        }
+
+        return counts;
+    }
+
     // 过滤出管理员用户
     const adminUsers = sortedUsers.filter(user => {
         return isAdmin(user.groups);
     });
+    const adminActionCounts = await getAdminActionsCount(adminUsers.map(user => user.name));
 
     adminUsers.forEach((user, index) => {
         const rank = index + 1;
         const username = user.name;
         const actions = user.recentactions || 0;
-        wikitext += `| ${rank} || {{User3|${username}}} || ${actions}\n`;
+        const adminActions = adminActionCounts[username] || 0;
+        wikitext += `| ${rank} || {{User3|${username}}} || ${actions} || ${adminActions}\n`;
         wikitext += '|-\n';
     });
     wikitext += '|}';
@@ -237,7 +305,7 @@ async function main() {
     console.log(pc.blue('[INFO] 正在写入页面 "NEA:近30日编辑数排名"...'));
     
     const pageName = 'NEA:近30日编辑数排名';
-    // const pageName = 'User:叮咚叮咚-bot/沙盒'; // 测试
+    //const pageName = 'User:叮咚叮咚-bot/沙盒'; // 测试
     
     try {
         // 读取现有页面内容
