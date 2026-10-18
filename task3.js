@@ -43,7 +43,8 @@ async function main() {
             const filteredUsers = users.map(user => ({
                 name: user.name,
                 recentactions: user.recentactions,
-                isbot: user.groups && user.groups.includes("bot") ? true : false,
+                groups: Array.isArray(user.groups) ? user.groups : [],
+                isbot: Array.isArray(user.groups) && user.groups.includes("bot") ? true : false,
             }));
             
             allUsers = allUsers.concat(filteredUsers);
@@ -67,6 +68,7 @@ async function main() {
         userDict[user.name] = {
             name: user.name,
             recentactions: user.recentactions,
+            groups: user.groups || [],
             isbot: user.isbot,
         };
     });
@@ -186,9 +188,39 @@ async function main() {
         }
         wikitext += '|-\n';
     });
+    wikitext += '|}';
+
+    // 生成管理员（含裁决委员、监督员）榜单
+    wikitext += '\n\n== 管理人员榜 ==\n';
+    wikitext += '注：近30日无操作记录者不计入。';
+    wikitext += '{| class="wikitable sortable" style="text-align:center;"\n';
+    wikitext += '! 排名 !! 用户名 !! 近30日操作数\n';
+    wikitext += '|-\n';
+
+    function isAdmin(groups) {
+        const normalizedGroups = Array.isArray(groups) ? groups : [];
+        return normalizedGroups.includes('sysop')
+            || normalizedGroups.includes('steward')
+            || normalizedGroups.includes('interface-admin')
+            || normalizedGroups.includes('suppress');
+    }
+
+    // 过滤出管理员用户
+    const adminUsers = sortedUsers.filter(user => {
+        return isAdmin(user.groups);
+    });
+
+    adminUsers.forEach((user, index) => {
+        const rank = index + 1;
+        const username = user.name;
+        const actions = user.recentactions || 0;
+        wikitext += `| ${rank} || {{User3|${username}}} || ${actions}\n`;
+        wikitext += '|-\n';
+    });
+    wikitext += '|}';
 
     // 说明
-    wikitext += '|}\n\n== 说明 ==\n';
+    wikitext += '\n\n== 说明 ==\n';
     wikitext += '* 本页面由机器人自动更新（一般每日早上6时更新），数据基于最近30天的编辑活动。\n';
     wikitext += '* 本页面API数据与[[Special:活跃用户]]理论上相同，如有误可能是MediaWiki系统的缓存问题，机器人操作者无法修复。\n';
     
@@ -205,6 +237,7 @@ async function main() {
     console.log(pc.blue('[INFO] 正在写入页面 "NEA:近30日编辑数排名"...'));
     
     const pageName = 'NEA:近30日编辑数排名';
+    // const pageName = 'User:叮咚叮咚-bot/沙盒'; // 测试
     
     try {
         // 读取现有页面内容
